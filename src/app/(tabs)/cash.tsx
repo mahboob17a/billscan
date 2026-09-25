@@ -42,10 +42,12 @@ export default function Cash() {
       load();
     }, [load]),
   );
-  // Opened from the Month screen's F or G row.
-  useEffect(() => {
+  // Opened from the Month screen's F or G row: pre-select that entry type.
+  const [seenKind, setSeenKind] = useState<string | undefined>(undefined);
+  if (params.kind !== seenKind) {
+    setSeenKind(params.kind);
     if (params.kind === 'brought_forward' || params.kind === 'received') setKind(params.kind);
-  }, [params.kind]);
+  }
   // Reload when bills or cash entries change on another screen.
   useEffect(
     () =>
