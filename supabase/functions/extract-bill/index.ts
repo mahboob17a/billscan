@@ -2,7 +2,7 @@
 //
 // Holds the OpenAI key (server secret). The phone never sees it.
 //   POST { mode: "ping" }                         → health check, no AI call, no login needed
-//   POST { images: ["<base64 jpeg>", ...], descriptions?: {...} }
+//   POST { images: ["<base64 jpeg>", ...], descriptions?: {...}, today?: "YYYY-MM-DD" }
 //        with Authorization: Bearer <user access token> → extraction JSON
 //
 // Secrets:  OPENAI_API_KEY (required), OPENAI_MODEL (optional),
@@ -11,13 +11,13 @@
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { buildSystemPrompt, CUSTOMER_VAT_NUMBERS, PROMPT_VERSION } from './prompt.ts';
-import { billSchema } from './schema.ts';
+import { allLabels, buildSystemPrompt, cleanDescriptions, CUSTOMER_VAT_NUMBERS, PROMPT_VERSION } from './prompt.ts';
+import { buildBillSchema } from './schema.ts';
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const MAX_PAGES = 3;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // per page, after base64 decode (~1600 px JPEG is well under this)
-const AI_TIMEOUT_MS = 30_000;
+const AI_TIMEOUT_MS = 45_000;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Use POST.' }, 405);
 
-  let body: { mode?: string; images?: unknown; descriptions?: Record<string, string[]>; model?: string };
+  let body: { mode?: string; images?: unknown; descriptions?: unknown; model?: string; today?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -93,6 +93,11 @@ Deno.serve(async (req) => {
     if (Math.floor((img.length * 3) / 4) > MAX_IMAGE_BYTES) return json({ error: 'Image too large. Rescan the bill.' }, 413);
   }
 
+  const descriptions = cleanDescriptions(body.descriptions);
+  const today = typeof body.today === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.today)
+    ? body.today
+    : new Date(Date.now() + 4 * 3600_000).toISOString().slice(0, 10); // Oman time
+
   const apiKey = env('OPENAI_API_KEY');
   if (!apiKey) return json({ error: 'AI service is not configured on the server.' }, 503);
 
@@ -112,9 +117,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: model(),
         temperature: 0,
-        response_format: { type: 'json_schema', json_schema: billSchema },
+        response_format: { type: 'json_schema', json_schema: buildBillSchema(allLabels(descriptions)) },
         messages: [
-          { role: 'system', content: buildSystemPrompt(body.descriptions) },
+          { role: 'system', content: buildSystemPrompt(descriptions, today) },
           {
             role: 'user',
             content: [

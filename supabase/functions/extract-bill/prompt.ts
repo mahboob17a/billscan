@@ -1,6 +1,7 @@
-// Extraction instructions — prompt v0.2 (tuned on the first 20 real UTAS Nizwa bills, Sep 2026).
+// Extraction instructions — prompt v0.3 (tuned on the first 20 real UTAS Nizwa bills, Sep 2026).
+// v0.3: description is an enum of the user's labels; the date is checked against today's date.
 
-export const PROMPT_VERSION = 'v0.2';
+export const PROMPT_VERSION = 'v0.3';
 
 /** Daryas' own VAT number appears on bills as the CUSTOMER — never the vendor. */
 export const CUSTOMER_VAT_NUMBERS = ['OM1100179267', '1100179267'];
@@ -23,7 +24,21 @@ export const DEFAULT_DESCRIPTIONS: Record<string, string[]> = {
   FUEL: ['Vehicle Fuel', 'Generator Diesel'],
 };
 
-export function buildSystemPrompt(descriptions: Record<string, string[]> = DEFAULT_DESCRIPTIONS): string {
+/** Labels the AI may choose from: the user's list, or the defaults when none/invalid is sent. */
+export function cleanDescriptions(input?: unknown): Record<string, string[]> {
+  if (!input || typeof input !== 'object') return DEFAULT_DESCRIPTIONS;
+  const out: Record<string, string[]> = {};
+  for (const [section, labels] of Object.entries(input as Record<string, unknown>)) {
+    if (!['MATERIAL', 'SEWAGE', 'TOOLS', 'FUEL'].includes(section) || !Array.isArray(labels)) continue;
+    const clean = labels.filter((l): l is string => typeof l === 'string' && l.trim().length > 0 && l.length <= 40).map((l) => l.trim());
+    if (clean.length) out[section] = [...new Set(clean)].slice(0, 40);
+  }
+  return Object.keys(out).length ? out : DEFAULT_DESCRIPTIONS;
+}
+
+export const allLabels = (d: Record<string, string[]>) => [...new Set(Object.values(d).flat())];
+
+export function buildSystemPrompt(descriptions: Record<string, string[]> = DEFAULT_DESCRIPTIONS, today: string = new Date().toISOString().slice(0, 10)): string {
   const list = Object.entries(descriptions)
     .map(([section, labels]) => `- ${section}: ${labels.join(', ')}`)
     .join('\n');
@@ -75,13 +90,17 @@ DESCRIPTION AND SECTION
   rewinding, repair, labour, servicing charges → Repair Service; sewage tanker → Sewage Removal; petrol/diesel → Vehicle Fuel.
 - Choose from this list (section: labels):
 ${list}
-- If nothing fits, propose a short 2–3 word label and mention it in notes.
+- description MUST be exactly one label from this list. If nothing fits well, choose the closest label and say
+  what the items were in notes (for example a plastic sheet → Consumables or Civil Material by its use).
 
 OTHER FIELDS
 - bill_no: the vendor's bill / invoice number (often a red printed serial like "Nº 0022" or "No. 4730", or
   "SAJ/2026/57897"). Keep leading zeros. Not the customer reference or the CR number.
 - bill_date as YYYY-MM-DD. Dates are day/month/year: "17.9.26" = 2026-09-17, "2/8/26" = 2026-08-02,
   "10-Sep-26" = 2026-09-10. Two-digit years are 20xx. Use the bill date, not a "printed on" time stamp.
+- Today is ${today}. Bills are normally dated within the last 60 days and never in the future. If your reading
+  gives a date outside that window (for example a different year, or a month that looks like the day), look at
+  the handwriting again; if it really is old or unclear, keep what is written and set confidence.bill_date to "low".
 - payment_mode: "cash" if the bill says cash / paid / "cash Daryas", "credit" if on account, "card" if card, else "unknown".
 - remarks: one short line, max 60 characters: vendor name and payment mode (e.g. "Abu Jasim Al-Hadidi · Cash"),
   plus anything notable (e.g. "LPO 245", "handwritten memo").

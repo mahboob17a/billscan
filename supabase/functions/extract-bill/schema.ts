@@ -9,7 +9,9 @@ const confidence = { type: 'string', enum: ['high', 'medium', 'low'] };
 export const SECTIONS = ['MATERIAL', 'SEWAGE', 'TOOLS', 'FUEL'] as const;
 export const DISCOUNT_TYPES = ['before_vat', 'after_vat', 'none'] as const;
 
-export const billSchema = {
+/** Strict schema; the description must be one of the user's labels (enum). */
+export function buildBillSchema(labels: string[]) {
+  return {
   name: 'bill_extraction',
   strict: true,
   schema: {
@@ -46,7 +48,7 @@ export const billSchema = {
       discount_type: { type: 'string', enum: DISCOUNT_TYPES },
       grand_total: { ...nullableNumber, description: 'OMR. Final amount payable after any round-off.' },
       total_only: { type: 'boolean', description: 'True if the bill prints only a single total with no VAT breakdown.' },
-      description: { type: 'string', description: 'ONE label for the whole bill.' },
+      description: { type: 'string', enum: labels, description: 'ONE label for the whole bill, from the list.' },
       section: { type: 'string', enum: SECTIONS },
       remarks: { type: 'string', description: 'Max 60 characters.' },
       payment_mode: { type: 'string', enum: ['cash', 'credit', 'card', 'unknown'] },
@@ -59,7 +61,8 @@ export const billSchema = {
       notes: { type: 'string', description: 'Anything the reviewer should know; empty string if nothing.' },
     },
   },
-} as const;
+  } as const;
+}
 
 export interface BillExtraction {
   vendor_name: string | null;

@@ -112,6 +112,8 @@ const summary = [
 ];
 for (const l of [...lines, ...summary]) console.log(l);
 if (gh) {
-  for (const l of lines) console.log(`::notice title=${l.slice(0, 3)}::${l.replace(/\n/g, ' ')}`);
-  console.log(`::notice title=Summary::${summary.join(' | ')}`);
+  // GitHub shows at most 10 notices per step: summary first, then bills in groups of 4.
+  const esc = (s) => s.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  console.log(`::notice title=Summary::${esc(summary.join('\n'))}`);
+  for (let i = 0; i < lines.length; i += 4) console.log(`::notice title=Bills ${i + 1}-${Math.min(i + 4, lines.length)}::${esc(lines.slice(i, i + 4).join('\n'))}`);
 }
