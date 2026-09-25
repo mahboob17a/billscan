@@ -111,4 +111,9 @@ export const MIGRATIONS: string[] = [
   INSERT OR IGNORE INTO description_catalog (user_id, label, section, active, sort)
     SELECT DISTINCT user_id, 'Repair Service', 'MATERIAL', 1, 8 FROM description_catalog;
   `,
+  // 3 — export history: revision number (R1, R2…) and the last file written
+  `
+  ALTER TABLE report_month ADD COLUMN revision INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE report_month ADD COLUMN exported_file TEXT;
+  `,
 ];

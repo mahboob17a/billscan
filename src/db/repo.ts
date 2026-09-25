@@ -140,6 +140,61 @@ export async function ensureMonth(userId: string, month: MonthId): Promise<void>
   );
 }
 
+/** A change to a month's saved bills or cash reopens an exported month; the next export is a revision. */
+export async function reopenMonth(userId: string, month: MonthId): Promise<void> {
+  const db = await getDb();
+  await db.runAsync("UPDATE report_month SET status = 'open' WHERE user_id = ? AND month = ? AND status = 'exported'", userId, month);
+}
+
+export interface ReportMonth {
+  month: MonthId;
+  statementRef: string;
+  datePrepared: string | null;
+  status: 'open' | 'exported';
+  exportedAt: string | null;
+  revision: number;
+  exportedFile: string | null;
+}
+
+export async function getReportMonth(userId: string, month: MonthId): Promise<ReportMonth> {
+  await ensureMonth(userId, month);
+  const db = await getDb();
+  const r = await db.getFirstAsync<{
+    statement_ref: string;
+    date_prepared: string | null;
+    status: 'open' | 'exported';
+    exported_at: string | null;
+    revision: number;
+    exported_file: string | null;
+  }>('SELECT statement_ref, date_prepared, status, exported_at, revision, exported_file FROM report_month WHERE user_id = ? AND month = ?', userId, month);
+  return {
+    month,
+    statementRef: r?.statement_ref ?? '',
+    datePrepared: r?.date_prepared ?? null,
+    status: r?.status ?? 'open',
+    exportedAt: r?.exported_at ?? null,
+    revision: r?.revision ?? 0,
+    exportedFile: r?.exported_file ?? null,
+  };
+}
+
+export async function markMonthExported(
+  userId: string,
+  month: MonthId,
+  info: { datePrepared: string; revision: number; file: string },
+): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    "UPDATE report_month SET status = 'exported', exported_at = ?, date_prepared = ?, revision = ?, exported_file = ? WHERE user_id = ? AND month = ?",
+    new Date().toISOString(),
+    info.datePrepared,
+    info.revision,
+    info.file,
+    userId,
+    month,
+  );
+}
+
 export async function getMonthSummary(userId: string, month: MonthId): Promise<MonthSummary> {
   await ensureMonth(userId, month);
   const db = await getDb();
@@ -229,9 +284,12 @@ export async function addCashEntry(
     e.remarks,
     new Date().toISOString(),
   );
+  await reopenMonth(userId, month);
 }
 
 export async function deleteCashEntry(userId: string, id: string): Promise<void> {
   const db = await getDb();
+  const row = await db.getFirstAsync<{ month: string }>('SELECT month FROM cash_entry WHERE user_id = ? AND id = ?', userId, id);
   await db.runAsync('DELETE FROM cash_entry WHERE user_id = ? AND id = ?', userId, id);
+  if (row) await reopenMonth(userId, row.month);
 }

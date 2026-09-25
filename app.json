@@ -3,7 +3,7 @@
     "name": "BillScan",
     "slug": "billscan",
     "scheme": "billscan",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.daryas.billscan",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#1B2230",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -67,7 +67,8 @@
         {
           "cameraPermission": "BillScan uses the camera to scan your purchase bills."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

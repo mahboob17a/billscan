@@ -2,7 +2,7 @@ import * as Crypto from 'expo-crypto';
 import type { DraftBill, Extraction } from '@/lib/billRules';
 import { MonthId } from '@/lib/months';
 import { getDb } from './index';
-import { ensureMonth } from './repo';
+import { ensureMonth, reopenMonth } from './repo';
 import { Section } from './schema';
 
 export type BillStatus = 'draft' | 'saved' | 'cancelled';
@@ -174,6 +174,7 @@ export async function updateBill(
 ): Promise<void> {
   const db = await getDb();
   if (opts.month) await ensureMonth(userId, opts.month);
+  const before = await db.getFirstAsync<{ month: string; status: BillStatus }>('SELECT month, status FROM bill WHERE user_id = ? AND id = ?', userId, id);
   const now = new Date().toISOString();
   await db.runAsync(
     `UPDATE bill SET section = ?, bill_date = ?, bill_no = ?, no_bill_no = ?, vendor_name = ?, vendor_vat_no = ?,
@@ -206,17 +207,30 @@ export async function updateBill(
     userId,
     id,
   );
+  // Only saved and cancelled bills are in the report; drafts don't reopen an exported month.
+  const statusAfter = opts.status ?? before?.status;
+  if (before && (before.status !== 'draft' || (statusAfter && statusAfter !== 'draft'))) {
+    await reopenMonth(userId, before.month);
+    if (opts.month && opts.month !== before.month) await reopenMonth(userId, opts.month);
+  }
 }
 
 export async function setBillStatus(userId: string, id: string, status: BillStatus): Promise<void> {
   const db = await getDb();
+  const before = await db.getFirstAsync<{ month: string }>('SELECT month FROM bill WHERE user_id = ? AND id = ?', userId, id);
+  if (before) await reopenMonth(userId, before.month);
   await db.runAsync('UPDATE bill SET status = ?, updated_at = ? WHERE user_id = ? AND id = ?', status, new Date().toISOString(), userId, id);
 }
 
 export async function deleteBill(userId: string, id: string): Promise<string[]> {
   const db = await getDb();
-  const r = await db.getFirstAsync<{ image_paths: string }>('SELECT image_paths FROM bill WHERE user_id = ? AND id = ?', userId, id);
+  const r = await db.getFirstAsync<{ image_paths: string; month: string; status: BillStatus }>(
+    'SELECT image_paths, month, status FROM bill WHERE user_id = ? AND id = ?',
+    userId,
+    id,
+  );
   await db.runAsync('DELETE FROM bill WHERE user_id = ? AND id = ?', userId, id);
+  if (r && r.status !== 'draft') await reopenMonth(userId, r.month);
   try {
     return r ? JSON.parse(r.image_paths) : [];
   } catch {

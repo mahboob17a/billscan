@@ -36,6 +36,14 @@ Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** 
 - [x] Section lists (A, B, C, D, E) and drafts list from the dashboard
 - [x] Accuracy test on 16 real bills (GitHub Actions → "AI accuracy test")
 
+**Phase 3 — Monthly report: built (v0.4.0).**
+- [x] Report tab: section totals, cash received, balance due, drafts warning, Date Prepared
+- [x] Excel export fills the bundled DTR template (navy/sand styling, column widths, page setup kept)
+- [x] One row per bill in Sections A–E (dates as real Excel dates, amounts 0.000), "No … recorded" line for empty sections
+- [x] Sub-total formula under each section; Section G uses live formulas: Total Purchase (A+C+D+E, cancelled excluded), Cash Received, Balance Due = Purchase − Cash
+- [x] File name from the statement reference (DTR-PUR-UTAS-NIZWA-YYYY-MM.xlsx); a change after export makes the next file -R1, -R2…
+- [x] Share sheet: email, WhatsApp, Drive
+
 Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout
