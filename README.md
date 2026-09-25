@@ -44,6 +44,14 @@ Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** 
 - [x] File name from the statement reference (DTR-PUR-UTAS-NIZWA-YYYY-MM.xlsx); a change after export makes the next file -R1, -R2…
 - [x] Share sheet: email, WhatsApp, Drive
 
+**Phase 4 — Polish and hardening: built (v0.5.0).**
+- [x] Bill-photo PDF for the month (contents page + one captioned page per photo), from the Report tab
+- [x] Offline queue: a bill scanned without signal is saved and read automatically when the phone is back online
+- [x] Backup and restore: all months, bills, photos, cash entries, descriptions and settings in one .zip
+- [x] Description list editor (add, rename, move section, retire)
+- [x] Crash and error reports: saved on the phone, uploaded to Supabase `app_errors` (admins read); friendly error screen
+- [x] AI usage this month (calls, pages, tokens) in System check
+
 Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout

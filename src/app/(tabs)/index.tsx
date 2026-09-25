@@ -5,6 +5,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { useAuth } from '@/auth/AuthProvider';
 import { MonthSwitcher } from '@/components/MonthSwitcher';
 import { Card, ScreenHeader } from '@/components/ui';
+import { countAiPending } from '@/db/bills';
 import { getMonthSummary, MonthSummary } from '@/db/repo';
 import { SECTION_INFO } from '@/db/schema';
 import { formatOmr } from '@/lib/money';
@@ -18,11 +19,14 @@ export default function Dashboard() {
   const month = useMonthStore((st) => st.month);
   const [summary, setSummary] = useState<MonthSummary | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [waiting, setWaiting] = useState(0);
   const userId = session?.user.id ?? '';
 
   const load = useCallback(async () => {
     if (!userId) return;
-    setSummary(await getMonthSummary(userId, month));
+    const [s, w] = await Promise.all([getMonthSummary(userId, month), countAiPending(userId)]);
+    setSummary(s);
+    setWaiting(w);
   }, [userId, month]);
 
   useFocusEffect(
@@ -68,6 +72,15 @@ export default function Dashboard() {
             {s ? formatOmr(Math.abs(s.balanceDue), { thousands: true }) : '—'} <Text style={styles.omr}>OMR</Text>
           </Text>
         </View>
+
+        {waiting > 0 ? (
+          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <MaterialCommunityIcons name="cloud-clock-outline" size={22} color={c.textMuted} />
+            <Text style={{ flex: 1, color: c.text, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 }}>
+              {waiting} scanned {waiting === 1 ? 'bill is' : 'bills are'} waiting for internet. {waiting === 1 ? 'It' : 'They'} will be read automatically.
+            </Text>
+          </Card>
+        ) : null}
 
         {s && s.draftsToReview > 0 ? (
           <Pressable onPress={() => router.push('/bills/drafts')} accessibilityRole="button">

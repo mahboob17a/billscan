@@ -116,4 +116,19 @@ export const MIGRATIONS: string[] = [
   ALTER TABLE report_month ADD COLUMN revision INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE report_month ADD COLUMN exported_file TEXT;
   `,
+  // 4 — offline AI queue and a local error log (uploaded to the server when online)
+  `
+  ALTER TABLE bill ADD COLUMN ai_status TEXT NOT NULL DEFAULT 'done';
+  CREATE INDEX IF NOT EXISTS bill_ai_pending ON bill (user_id, ai_status);
+  CREATE TABLE IF NOT EXISTS error_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     TEXT,
+    created_at  TEXT NOT NULL,
+    message     TEXT NOT NULL,
+    stack       TEXT,
+    context     TEXT,
+    fatal       INTEGER NOT NULL DEFAULT 0,
+    uploaded    INTEGER NOT NULL DEFAULT 0
+  );
+  `,
 ];

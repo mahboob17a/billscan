@@ -8,10 +8,12 @@ import DocumentScanner, { ResponseType, ScanDocumentResponseStatus } from 'react
 import { useAuth } from '@/auth/AuthProvider';
 import { MonthSwitcher } from '@/components/MonthSwitcher';
 import { Button, Card, Message, ScreenHeader } from '@/components/ui';
-import { createBill, EMPTY_DRAFT, updateBill } from '@/db/bills';
+import { createBill, EMPTY_DRAFT, setAiStatus, updateBill } from '@/db/bills';
 import { descriptionsBySection, listDescriptions } from '@/db/repo';
 import { prepareBillImages } from '@/lib/billImages';
 import { draftFromExtraction } from '@/lib/billRules';
+import { isOnline } from '@/lib/aiQueue';
+import { logError } from '@/lib/errorLog';
 import { extractBill } from '@/lib/extract';
 import { monthLabel } from '@/lib/months';
 import { useMonthStore } from '@/state/month';
@@ -40,6 +42,11 @@ export default function Scan() {
       await createBill(userId, month, EMPTY_DRAFT, pages.map((p) => p.uri), null, id);
       touch();
 
+      if (!(await isOnline())) {
+        // Saved as "waiting for internet"; the queue reads it when signal returns.
+        router.push({ pathname: '/bill/[id]', params: { id } });
+        return;
+      }
       setStage('reading');
       const labels = descriptionsBySection(await listDescriptions(userId));
       const result = await extractBill(
@@ -51,9 +58,11 @@ export default function Scan() {
         touch();
         router.push({ pathname: '/bill/[id]', params: { id } });
       } else {
-        router.push({ pathname: '/bill/[id]', params: { id, aiError: result.error } });
+        if (!result.offline) await setAiStatus(userId, id, 'failed');
+        router.push({ pathname: '/bill/[id]', params: result.offline ? { id } : { id, aiError: result.error } });
       }
     } catch (e) {
+      logError(e, { where: 'scan.process' });
       setError(`Could not process the photo: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setStage('idle');
@@ -71,6 +80,7 @@ export default function Scan() {
       if (res.status === ScanDocumentResponseStatus.Cancel || !res.scannedImages?.length) return;
       await process(res.scannedImages);
     } catch (e) {
+      logError(e, { where: 'scan.camera' });
       setError(`The camera scanner could not start: ${e instanceof Error ? e.message : String(e)}. Try "Choose from gallery".`);
     }
   }

@@ -102,7 +102,13 @@ export default function Settings() {
         <Text style={[styles.h2, { color: c.textMuted }]}>REPORT</Text>
         <Card style={{ gap: 0, paddingVertical: 4 }}>
           <LinkRow icon="file-document-edit-outline" label="Report header" detail="Prepared by, submitted to, reference" onPress={() => router.push('/report-settings')} first />
-          <LinkRow icon="stethoscope" label="System check" detail="Test the server and AI connection" onPress={() => router.push('/system-check')} />
+          <LinkRow icon="format-list-bulleted" label="Description list" detail="Add, rename or retire descriptions" onPress={() => router.push('/descriptions')} />
+        </Card>
+
+        <Text style={[styles.h2, { color: c.textMuted }]}>DATA</Text>
+        <Card style={{ gap: 0, paddingVertical: 4 }}>
+          <LinkRow icon="cloud-sync-outline" label="Backup and restore" detail="All months, bills and photos in one file" onPress={() => router.push('/backup')} first />
+          <LinkRow icon="stethoscope" label="System check" detail="Server, AI connection and AI usage" onPress={() => router.push('/system-check')} />
         </Card>
 
         <Button label="Sign out" kind="danger" onPress={confirmSignOut} style={{ marginTop: spacing.sm }} />

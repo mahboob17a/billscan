@@ -94,3 +94,8 @@ export function reportFileExists(uri: string | null): boolean {
     return false;
   }
 }
+
+export async function sharePdf(uri: string, fileName: string): Promise<void> {
+  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this phone.');
+  await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: `Send ${fileName}` });
+}

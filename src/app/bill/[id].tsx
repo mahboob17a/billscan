@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
-import { BillRecord, deleteBill, findDuplicates, getBill, updateBill } from '@/db/bills';
+import { BillRecord, deleteBill, findDuplicates, getBill, setAiStatus, updateBill } from '@/db/bills';
 import { DescriptionItem, descriptionsBySection, listDescriptions } from '@/db/repo';
 import { Section, SECTION_INFO, SECTIONS } from '@/db/schema';
 import { BillForm, draftFromForm, formFromDraft, splitFromTotal } from '@/lib/billForm';
@@ -66,6 +66,18 @@ export default function BillReview() {
     }, [load]),
   );
 
+  // A bill waiting for internet is filled in by the background queue; show the result
+  // as long as nothing has been typed on this screen yet.
+  const formEmpty = !form || (!form.grandTotal && !form.billNo && !form.billDate);
+  const waiting = bill?.aiStatus === 'pending';
+  useEffect(
+    () =>
+      useMonthStore.subscribe((s, prev) => {
+        if (s.version !== prev.version && waiting && formEmpty) load();
+      }),
+    [waiting, formEmpty, load],
+  );
+
   const draft = useMemo(() => (form && bill ? draftFromForm(form, bill) : null), [form, bill]);
   const flags: Flag[] = useMemo(() => {
     if (!draft || !bill) return [];
@@ -108,7 +120,11 @@ export default function BillReview() {
     try {
       const pages = await readPagesBase64(bill.imagePaths);
       const res = await extractBill(pages, descriptionsBySection(descs));
-      if (!res.ok) return setAiMsg(res.error);
+      if (!res.ok) {
+        if (res.offline) return setAiMsg('Still no internet. The bill will be read automatically when you are back online.');
+        await setAiStatus(userId, bill.id, 'failed');
+        return setAiMsg(res.error);
+      }
       const d = draftFromExtraction(res.extraction);
       await updateBill(userId, bill.id, d, { extraction: res.extraction });
       touch();
@@ -223,6 +239,14 @@ export default function BillReview() {
           <View style={{ gap: spacing.sm }}>
             <Message tone="error" text={`${aiMsg} You can type the details yourself, or try again.`} />
             {bill.imagePaths.length > 0 ? <Button label="Read with AI again" kind="secondary" onPress={onReadAgain} /> : null}
+          </View>
+        ) : bill.aiStatus === 'pending' && !bill.extraction ? (
+          <View style={{ gap: spacing.sm }}>
+            <Message
+              tone="info"
+              text="Waiting for internet. The photo is saved and this bill will be read automatically when the phone is back online. You can also type the details yourself."
+            />
+            <Button label="Read now" kind="secondary" onPress={onReadAgain} />
           </View>
         ) : !bill.extraction && bill.imagePaths.length > 0 ? (
           <Button label="Read with AI" kind="secondary" onPress={onReadAgain} />

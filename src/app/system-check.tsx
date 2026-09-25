@@ -8,6 +8,7 @@ import { Logo } from '@/components/Logo';
 import reportTemplate from '../../assets/templates/DTR-PUR-UTAS-NIZWA-template.xlsx';
 import { pingBackend, PingResult } from '@/lib/backend';
 import { isBackendConfigured } from '@/lib/config';
+import { AiUsage, getAiUsageThisMonth, pendingErrorReports } from '@/lib/usage';
 import { formatOmr, splitInclusiveTotal } from '@/lib/money';
 import { fonts, palette, radius, spacing, ThemeColors, type, useThemeColors } from '@/theme';
 
@@ -93,6 +94,8 @@ export default function SystemCheck() {
           detail={ping ? ping.message : isBackendConfigured() ? 'Tap the button to test' : 'Server address not set yet'}
         />
 
+        <UsageCard c={c} />
+
         <Pressable
           accessibilityRole="button"
           onPress={runPing}
@@ -102,6 +105,36 @@ export default function SystemCheck() {
           {pinging ? <ActivityIndicator color={c.onPrimary} /> : <Text style={s.buttonText}>Test server connection</Text>}
         </Pressable>
       </ScrollView>
+    </View>
+  );
+}
+
+function UsageCard({ c }: { c: ThemeColors }) {
+  const [usage, setUsage] = useState<AiUsage | { error: string } | null>(null);
+  const [errors, setErrors] = useState(0);
+  useEffect(() => {
+    getAiUsageThisMonth().then(setUsage);
+    pendingErrorReports().then(setErrors);
+  }, []);
+  const u = usage && !('error' in usage) ? usage : null;
+  return (
+    <View style={[rowStyles.usage, { backgroundColor: c.surface, borderColor: c.border }]}>
+      <Text style={{ color: c.text, fontFamily: fonts.semibold, fontSize: 15 }}>AI usage this month</Text>
+      {usage === null ? (
+        <ActivityIndicator color={c.primary} />
+      ) : 'error' in usage ? (
+        <Text style={{ color: c.textMuted, fontFamily: fonts.regular, fontSize: 13 }}>{usage.error}</Text>
+      ) : (
+        <Text style={{ color: c.textMuted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 20 }}>
+          {u!.calls} bills read ({u!.pages} pages){u!.failed ? `, ${u!.failed} failed` : ''} · about {u!.avgSeconds} s each{'\n'}
+          Tokens: {u!.promptTokens.toLocaleString('en-US')} in, {u!.completionTokens.toLocaleString('en-US')} out
+        </Text>
+      )}
+      {errors > 0 ? (
+        <Text style={{ color: c.warning, fontFamily: fonts.regular, fontSize: 13 }}>
+          {errors} error {errors === 1 ? 'report' : 'reports'} waiting to be sent (sent automatically when online).
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -128,6 +161,7 @@ function CheckRow({ c, label, status, detail }: { c: ThemeColors; label: string;
 
 const rowStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.md, borderWidth: 1 },
+  usage: { padding: spacing.md, borderRadius: radius.md, borderWidth: 1, gap: 4 },
   badge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
 });
 

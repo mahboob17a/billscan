@@ -6,6 +6,8 @@ import { ensureMonth, reopenMonth } from './repo';
 import { Section } from './schema';
 
 export type BillStatus = 'draft' | 'saved' | 'cancelled';
+/** AI reading state: done, waiting for internet (pending), failed, or none (typed by hand). */
+export type AiStatus = 'done' | 'pending' | 'failed' | 'none';
 
 export interface BillRecord extends DraftBill {
   id: string;
@@ -13,6 +15,7 @@ export interface BillRecord extends DraftBill {
   status: BillStatus;
   imagePaths: string[];
   extraction: Extraction | null;
+  aiStatus: AiStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +42,7 @@ interface Row {
   flags: string;
   image_paths: string;
   ai_raw_json: string | null;
+  ai_status: AiStatus;
   created_at: string;
   updated_at: string;
 }
@@ -91,6 +95,7 @@ function fromRow(r: Row): BillRecord {
     remarks: r.remarks,
     imagePaths,
     extraction,
+    aiStatus: r.ai_status ?? 'done',
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -130,8 +135,8 @@ export async function createBill(
   await db.runAsync(
     `INSERT INTO bill (id, user_id, month, section, status, bill_date, bill_no, no_bill_no, vendor_name, vendor_vat_no,
        description, shop_rate, vat, discount, discount_type, grand_total, total_only, payment_mode, remarks, flags,
-       image_paths, ai_raw_json, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       image_paths, ai_raw_json, ai_status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     userId,
     month,
@@ -153,6 +158,7 @@ export async function createBill(
     JSON.stringify({ vatSource: draft.vatSource, vendorVatRegistered: draft.vendorVatRegistered } satisfies StoredMeta),
     JSON.stringify(imagePaths),
     extraction ? JSON.stringify(extraction) : null,
+    extraction ? 'done' : imagePaths.length > 0 ? 'pending' : 'none',
     now,
     now,
   );
@@ -181,7 +187,8 @@ export async function updateBill(
        description = ?, shop_rate = ?, vat = ?, discount = ?, discount_type = ?, grand_total = ?, total_only = ?,
        payment_mode = ?, remarks = ?, flags = ?, updated_at = ?,
        month = COALESCE(?, month), status = COALESCE(?, status),
-       ai_raw_json = CASE WHEN ? = 1 THEN ? ELSE ai_raw_json END
+       ai_raw_json = CASE WHEN ? = 1 THEN ? ELSE ai_raw_json END,
+       ai_status = CASE WHEN ? = 1 THEN 'done' ELSE ai_status END
      WHERE user_id = ? AND id = ?`,
     draft.section,
     draft.billDate,
@@ -204,6 +211,7 @@ export async function updateBill(
     opts.status ?? null,
     opts.extraction !== undefined ? 1 : 0,
     opts.extraction ? JSON.stringify(opts.extraction) : null,
+    opts.extraction ? 1 : 0,
     userId,
     id,
   );
@@ -274,4 +282,28 @@ export async function findDuplicates(userId: string, id: string, d: DraftBill): 
     d.grandTotal,
   );
   return rows.map(fromRow);
+}
+
+/** Mark the AI reading state of a bill (e.g. "pending" when there is no internet). */
+export async function setAiStatus(userId: string, id: string, status: AiStatus): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('UPDATE bill SET ai_status = ?, updated_at = ? WHERE user_id = ? AND id = ?', status, new Date().toISOString(), userId, id);
+}
+
+/** Bills whose photos still need reading, oldest first. Skips bills touched in the last `quietMs` (a scan may be in progress). */
+export async function listAiPending(userId: string, quietMs = 90_000): Promise<BillRecord[]> {
+  const db = await getDb();
+  const cutoff = new Date(Date.now() - quietMs).toISOString();
+  const rows = await db.getAllAsync<Row>(
+    "SELECT * FROM bill WHERE user_id = ? AND ai_status = 'pending' AND status = 'draft' AND updated_at < ? ORDER BY created_at LIMIT 10",
+    userId,
+    cutoff,
+  );
+  return rows.map(fromRow);
+}
+
+export async function countAiPending(userId: string): Promise<number> {
+  const db = await getDb();
+  const r = await db.getFirstAsync<{ n: number }>("SELECT COUNT(*) AS n FROM bill WHERE user_id = ? AND ai_status = 'pending' AND status = 'draft'", userId);
+  return r?.n ?? 0;
 }

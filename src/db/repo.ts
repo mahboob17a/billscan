@@ -102,6 +102,82 @@ export async function listDescriptions(userId: string): Promise<DescriptionItem[
   return rows.length ? rows : DEFAULT_DESCRIPTIONS;
 }
 
+export interface DescriptionRow extends DescriptionItem {
+  active: boolean;
+  used: number; // bills using this label
+}
+
+/** Every label (active and retired) with how many bills use it — for the editor in Settings. */
+export async function listAllDescriptions(userId: string): Promise<DescriptionRow[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ label: string; section: Section; active: number; used: number }>(
+    `SELECT d.label, d.section, d.active,
+            (SELECT COUNT(*) FROM bill b WHERE b.user_id = d.user_id AND b.description = d.label) AS used
+       FROM description_catalog d WHERE d.user_id = ? ORDER BY d.sort, d.label`,
+    userId,
+  );
+  return rows.map((r) => ({ label: r.label, section: r.section, active: r.active === 1, used: r.used }));
+}
+
+export function cleanLabel(label: string): string {
+  return label.replace(/\s+/g, ' ').trim().slice(0, 40);
+}
+
+/** Add a label (or bring back a retired one). Returns an error message or null. */
+export async function addDescription(userId: string, label: string, section: Section): Promise<string | null> {
+  const clean = cleanLabel(label);
+  if (clean.length < 2) return 'Type a description of at least 2 letters.';
+  const db = await getDb();
+  const existing = await db.getFirstAsync<{ label: string; active: number }>(
+    'SELECT label, active FROM description_catalog WHERE user_id = ? AND LOWER(label) = LOWER(?)',
+    userId,
+    clean,
+  );
+  if (existing?.active === 1) return `“${existing.label}” is already in the list.`;
+  if (existing) {
+    await db.runAsync('UPDATE description_catalog SET active = 1, section = ? WHERE user_id = ? AND label = ?', section, userId, existing.label);
+    return null;
+  }
+  const max = await db.getFirstAsync<{ m: number | null }>('SELECT MAX(sort) AS m FROM description_catalog WHERE user_id = ?', userId);
+  await db.runAsync(
+    'INSERT INTO description_catalog (user_id, label, section, active, sort) VALUES (?, ?, ?, 1, ?)',
+    userId,
+    clean,
+    section,
+    (max?.m ?? 0) + 1,
+  );
+  return null;
+}
+
+/**
+ * Rename a label and/or move it to another section. Draft bills follow the new name;
+ * saved bills keep the name they were saved with (the report already went out with it).
+ */
+export async function updateDescription(userId: string, oldLabel: string, newLabel: string, section: Section): Promise<string | null> {
+  const clean = cleanLabel(newLabel);
+  if (clean.length < 2) return 'Type a description of at least 2 letters.';
+  const db = await getDb();
+  if (clean.toLowerCase() !== oldLabel.toLowerCase()) {
+    const clash = await db.getFirstAsync<{ n: number }>(
+      'SELECT COUNT(*) AS n FROM description_catalog WHERE user_id = ? AND LOWER(label) = LOWER(?)',
+      userId,
+      clean,
+    );
+    if (clash && clash.n > 0) return `“${clean}” is already in the list.`;
+  }
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE description_catalog SET label = ?, section = ? WHERE user_id = ? AND label = ?', clean, section, userId, oldLabel);
+    await db.runAsync("UPDATE bill SET description = ?, section = ? WHERE user_id = ? AND description = ? AND status = 'draft'", clean, section, userId, oldLabel);
+  });
+  return null;
+}
+
+/** Retire (hide from the list and from the AI) or bring back a label. Bills keep their text. */
+export async function setDescriptionActive(userId: string, label: string, active: boolean): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('UPDATE description_catalog SET active = ? WHERE user_id = ? AND label = ?', active ? 1 : 0, userId, label);
+}
+
 /** The list grouped by section, as sent to the AI. */
 export function descriptionsBySection(items: DescriptionItem[]): Record<string, string[]> {
   const out: Record<string, string[]> = {};

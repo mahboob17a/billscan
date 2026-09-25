@@ -11,7 +11,9 @@ import { isoToDmy } from '@/lib/billForm';
 import { parseDmy, todayDmy } from '@/lib/dates';
 import { formatOmr } from '@/lib/money';
 import { monthLabel } from '@/lib/months';
-import { exportMonthReport, reportFileExists, shareReport } from '@/report/export';
+import { exportMonthReport, reportFileExists, sharePdf, shareReport } from '@/report/export';
+import { buildBillPhotosPdf } from '@/report/photosPdf';
+import { logError } from '@/lib/errorLog';
 import { nextRevision, reportFileName } from '@/report/naming';
 import { useMonthStore } from '@/state/month';
 import { fonts, spacing, useThemeColors } from '@/theme';
@@ -26,6 +28,7 @@ export default function Export() {
   const [rm, setRm] = useState<ReportMonth | null>(null);
   const [datePrepared, setDatePrepared] = useState(todayDmy());
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -63,9 +66,25 @@ export default function Export() {
       setMsg({ tone: 'success', text: `Saved ${res.fileName}. Choose where to send it.` });
       await shareReport(res.uri, res.fileName);
     } catch (e) {
+      logError(e, { where: 'export.xlsx' });
       setMsg({ tone: 'error', text: `Could not create the report: ${e instanceof Error ? e.message : String(e)}` });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function onPhotosPdf() {
+    setMsg(null);
+    setPdfBusy(true);
+    try {
+      const res = await buildBillPhotosPdf(userId, month);
+      setMsg({ tone: 'success', text: `Saved ${res.fileName} (${res.photoCount} photos).` });
+      await sharePdf(res.uri, res.fileName);
+    } catch (e) {
+      logError(e, { where: 'export.photosPdf' });
+      setMsg({ tone: 'error', text: `Could not make the photo PDF: ${e instanceof Error ? e.message : String(e)}` });
+    } finally {
+      setPdfBusy(false);
     }
   }
 
@@ -144,6 +163,14 @@ export default function Export() {
           busy={busy}
           disabled={!s}
           icon={<MaterialCommunityIcons name="file-excel-outline" size={20} color={c.onPrimary} />}
+        />
+        <Button
+          label="Send bill photos (PDF)"
+          kind="secondary"
+          onPress={onPhotosPdf}
+          busy={pdfBusy}
+          disabled={!s || billCount + (s?.cancelledBills ?? 0) === 0}
+          icon={<MaterialCommunityIcons name="file-pdf-box" size={20} color={c.text} />}
         />
         {canShareAgain ? (
           <Button
