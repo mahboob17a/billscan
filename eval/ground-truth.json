@@ -1,0 +1,492 @@
+{
+ "_about": "Correct values for the first sample bills (Sep 2026), read by hand. Used by unit tests (as a perfect AI answer) and by the accuracy test (compared with the live AI). Vendor names are anonymised; the photos are stored encrypted (eval/samples.tar.gz.enc).",
+ "bills": [
+  {
+   "id": "S01",
+   "image": "d276d193",
+   "vendor": "Vendor S01",
+   "bill_no": "64731",
+   "bill_date": "2026-08-26",
+   "taxable_amount": 10.0,
+   "vat_amount": 0.5,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 10.5,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Electrical Goods",
+    "MEP Purchase"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 10.0,
+    "vat": 0.5,
+    "disc": 0,
+    "grand": 10.5
+   }
+  },
+  {
+   "id": "S02",
+   "image": "47b0e6b1",
+   "vendor": "Vendor S02",
+   "bill_no": "4730",
+   "bill_date": "2026-08-02",
+   "taxable_amount": 155.0,
+   "vat_amount": 7.75,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 162.75,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 155.0,
+    "vat": 7.75,
+    "disc": 0,
+    "grand": 162.75
+   }
+  },
+  {
+   "id": "S03",
+   "image": "0c23fe3c",
+   "vendor": "Vendor S03",
+   "bill_no": "010076",
+   "bill_date": "2026-09-17",
+   "taxable_amount": 10.5,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 10.5,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 10.5,
+    "vat": 0,
+    "disc": 0,
+    "grand": 10.5
+   }
+  },
+  {
+   "id": "S04",
+   "image": "a6993f24",
+   "vendor": "Vendor S04",
+   "bill_no": "4286",
+   "bill_date": "2026-09-17",
+   "taxable_amount": 6.4,
+   "vat_amount": 0.32,
+   "discount": 0.22,
+   "discount_type": "after_vat",
+   "grand_total": 6.5,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Paint"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 6.4,
+    "vat": 0.32,
+    "disc": 0.22,
+    "grand": 6.5
+   }
+  },
+  {
+   "id": "S05",
+   "image": "2fcbbdad",
+   "vendor": "Vendor S05",
+   "bill_no": "0022",
+   "bill_date": "2026-09-17",
+   "taxable_amount": 46.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 46.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Electrical Goods"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 46.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 46.0
+   }
+  },
+  {
+   "id": "S06",
+   "image": "f6cbff88",
+   "vendor": "Vendor S06",
+   "bill_no": "2799",
+   "bill_date": "2026-09-17",
+   "taxable_amount": 6.0,
+   "vat_amount": 0.3,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 6.3,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Paint"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 6.0,
+    "vat": 0.3,
+    "disc": 0,
+    "grand": 6.3
+   }
+  },
+  {
+   "id": "S07",
+   "image": "242af637",
+   "vendor": "Vendor S07",
+   "bill_no": "2725",
+   "bill_date": "2026-09-10",
+   "taxable_amount": 20.5,
+   "vat_amount": 1.025,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 21.525,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Paint"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 20.5,
+    "vat": 1.025,
+    "disc": 0,
+    "grand": 21.525
+   }
+  },
+  {
+   "id": "S08",
+   "image": "c39ce062",
+   "vendor": "Vendor S08",
+   "bill_no": "000901",
+   "bill_date": "2026-09-03",
+   "taxable_amount": 2.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 2.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Consumables",
+    "Civil Material",
+    "Hand Tools"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 2.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 2.0
+   }
+  },
+  {
+   "id": "S09",
+   "image": "8316ade0",
+   "vendor": "Vendor S09",
+   "bill_no": "SAJ/2026/57897",
+   "bill_date": "2026-09-10",
+   "taxable_amount": 1.524,
+   "vat_amount": 0.076,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 1.6,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Civil Material"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 1.524,
+    "vat": 0.076,
+    "disc": 0,
+    "grand": 1.6
+   }
+  },
+  {
+   "id": "S10",
+   "image": "d1428c49",
+   "vendor": "Vendor S10",
+   "bill_no": "26445",
+   "bill_date": "2026-09-07",
+   "taxable_amount": 31.1,
+   "vat_amount": 1.555,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 32.655,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Plumbing Material"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 31.1,
+    "vat": 1.555,
+    "disc": 0,
+    "grand": 32.655
+   }
+  },
+  {
+   "id": "S11",
+   "image": "421e7f51",
+   "vendor": "Vendor S11",
+   "bill_no": "2604",
+   "bill_date": "2026-09-24",
+   "taxable_amount": 1.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 1.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Civil Material",
+    "Carpentry Item"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 1.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 1.0
+   }
+  },
+  {
+   "id": "S12",
+   "image": "737e9ef7",
+   "vendor": "Vendor S12",
+   "bill_no": "MNW/2026/03596",
+   "bill_date": "2026-09-20",
+   "taxable_amount": 5.33,
+   "vat_amount": 0.27,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 5.6,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 5.33,
+    "vat": 0.27,
+    "disc": 0,
+    "grand": 5.6
+   }
+  },
+  {
+   "id": "S13",
+   "image": "d293ef31",
+   "vendor": "Vendor S13",
+   "bill_no": "0033",
+   "bill_date": "2026-09-20",
+   "taxable_amount": 2.8,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 2.8,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Electrical Goods",
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 2.8,
+    "vat": 0,
+    "disc": 0,
+    "grand": 2.8
+   }
+  },
+  {
+   "id": "S14",
+   "image": "5ca37e21",
+   "vendor": "Vendor S14",
+   "bill_no": "0073",
+   "bill_date": "2026-09-24",
+   "taxable_amount": 48.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 48.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Repair Service"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 48.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 48.0
+   }
+  },
+  {
+   "id": "S15",
+   "image": "6119207b",
+   "vendor": "Vendor S15",
+   "bill_no": "0031",
+   "bill_date": "2026-09-20",
+   "taxable_amount": 10.3,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 10.3,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Plumbing Material"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 10.3,
+    "vat": 0,
+    "disc": 0,
+    "grand": 10.3
+   }
+  },
+  {
+   "id": "S16",
+   "image": "7a3f8e8e",
+   "vendor": "Vendor S16",
+   "bill_no": "0048",
+   "bill_date": "2026-09-23",
+   "taxable_amount": 11.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 11.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Electrical Goods",
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 11.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 11.0
+   }
+  },
+  {
+   "id": "S17",
+   "image": null,
+   "vendor": "Vendor S17",
+   "bill_no": "2181",
+   "bill_date": "2026-09-02",
+   "taxable_amount": 7.0,
+   "vat_amount": 0.35,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 7.35,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "HVAC Spares"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 7.0,
+    "vat": 0.35,
+    "disc": 0,
+    "grand": 7.35
+   }
+  },
+  {
+   "id": "S18",
+   "image": null,
+   "vendor": "Vendor S18",
+   "bill_no": "1053",
+   "bill_date": "2026-09-21",
+   "taxable_amount": 5.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 5.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Consumables"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 5.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 5.0
+   }
+  },
+  {
+   "id": "S19",
+   "image": null,
+   "vendor": "Vendor S19",
+   "bill_no": "2191",
+   "bill_date": "2026-09-23",
+   "taxable_amount": 8.0,
+   "vat_amount": 0.4,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 8.4,
+   "total_only": false,
+   "vendor_vat_registered": true,
+   "description": [
+    "Electrical Goods"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 8.0,
+    "vat": 0.4,
+    "disc": 0,
+    "grand": 8.4
+   }
+  },
+  {
+   "id": "S20",
+   "image": null,
+   "vendor": "Vendor S20",
+   "bill_no": "0764",
+   "bill_date": null,
+   "taxable_amount": 6.0,
+   "vat_amount": 0,
+   "discount": 0,
+   "discount_type": "none",
+   "grand_total": 6.0,
+   "total_only": true,
+   "vendor_vat_registered": false,
+   "description": [
+    "Carpentry Item",
+    "Consumables"
+   ],
+   "section": "MATERIAL",
+   "row": {
+    "shop_rate": 6.0,
+    "vat": 0,
+    "disc": 0,
+    "grand": 6.0
+   }
+  }
+ ]
+}

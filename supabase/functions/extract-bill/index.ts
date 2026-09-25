@@ -5,12 +5,13 @@
 //   POST { images: ["<base64 jpeg>", ...], descriptions?: {...} }
 //        with Authorization: Bearer <user access token> → extraction JSON
 //
-// Secrets:  OPENAI_API_KEY (required), OPENAI_MODEL (optional)
+// Secrets:  OPENAI_API_KEY (required), OPENAI_MODEL (optional),
+//           EVAL_TOKEN (optional: lets the accuracy test harness call without a user session)
 // Provided by Supabase: SUPABASE_URL, SUPABASE_SECRET_KEYS (or legacy SUPABASE_SERVICE_ROLE_KEY)
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { buildSystemPrompt } from './prompt.ts';
+import { buildSystemPrompt, CUSTOMER_VAT_NUMBERS, PROMPT_VERSION } from './prompt.ts';
 import { billSchema } from './schema.ts';
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -32,7 +33,7 @@ function json(body: unknown, status = 200): Response {
 }
 
 const env = (k: string) => Deno.env.get(k) ?? '';
-const model = () => env('OPENAI_MODEL') || 'gpt-4.1-mini';
+const defaultModel = () => env('OPENAI_MODEL') || 'gpt-4.1-mini';
 
 /** Server-only key: new-style SUPABASE_SECRET_KEYS (JSON), falling back to the legacy service role key. */
 function serviceKey(): string {
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Use POST.' }, 405);
 
-  let body: { mode?: string; images?: unknown; descriptions?: Record<string, string[]> };
+  let body: { mode?: string; images?: unknown; descriptions?: Record<string, string[]>; model?: string };
   try {
     body = await req.json();
   } catch {
@@ -59,22 +60,30 @@ Deno.serve(async (req) => {
 
   // ── Health check (Phase 0 "done when": server answers, key is configured) ──
   if (body.mode === 'ping') {
-    return json({ ok: true, aiKeyConfigured: env('OPENAI_API_KEY').startsWith('sk-'), model: model() });
+    return json({ ok: true, aiKeyConfigured: env('OPENAI_API_KEY').startsWith('sk-'), model: defaultModel(), prompt: PROMPT_VERSION });
   }
-
-  // ── Authenticate the signed-in user ──
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!token) return json({ error: 'Sign in required.' }, 401);
 
   const admin = createClient(env('SUPABASE_URL'), serviceKey(), {
     auth: { persistSession: false },
   });
-  const { data: userData, error: userError } = await admin.auth.getUser(token);
-  if (userError || !userData.user) return json({ error: 'Your session has expired. Sign in again.' }, 401);
-  const userId = userData.user.id;
 
-  const { data: profile } = await admin.from('profiles').select('active').eq('id', userId).maybeSingle();
-  if (!profile?.active) return json({ error: 'This account is not active. Ask your admin.' }, 403);
+  // ── Authenticate: signed-in user, or the accuracy-test harness ──
+  let userId: string | null = null;
+  const evalToken = env('EVAL_TOKEN');
+  const isEval = evalToken.length >= 32 && req.headers.get('x-eval-token') === evalToken;
+  if (!isEval) {
+    const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+    if (!token) return json({ error: 'Sign in required.' }, 401);
+    const { data: userData, error: userError } = await admin.auth.getUser(token);
+    if (userError || !userData.user) return json({ error: 'Your session has expired. Sign in again.' }, 401);
+    userId = userData.user.id;
+    const { data: profile } = await admin.from('profiles').select('active').eq('id', userId).maybeSingle();
+    if (!profile?.active) return json({ error: 'This account is not active. Ask your admin.' }, 403);
+  }
+
+  // The accuracy test may compare models; normal users always get the configured model.
+  const modelName = isEval && typeof body.model === 'string' && /^[a-z0-9.\-]{3,40}$/.test(body.model) ? body.model : defaultModel();
+  const model = () => modelName;
 
   // ── Validate images ──
   const images = Array.isArray(body.images) ? (body.images as unknown[]).filter((x): x is string => typeof x === 'string') : [];
@@ -132,8 +141,13 @@ Deno.serve(async (req) => {
       return json({ error: 'The AI declined to read this image. Check it is a bill.' }, 422);
     }
     const extraction = JSON.parse(message?.content ?? '{}');
+    // Guard: Daryas' own VAT number is the customer's, never the vendor's.
+    const vat = String(extraction.vendor_vat_no ?? '').replace(/\s/g, '').toUpperCase();
+    if (vat && CUSTOMER_VAT_NUMBERS.some((c) => vat.endsWith(c.replace(/^OM/, '')))) {
+      extraction.vendor_vat_no = null;
+    }
     ok = true;
-    return json({ extraction, model: model() });
+    return json({ extraction, model: model(), prompt: PROMPT_VERSION, usage });
   } catch (e) {
     errorText = e instanceof Error ? e.message : String(e);
     const aborted = e instanceof Error && e.name === 'AbortError';
@@ -145,7 +159,7 @@ Deno.serve(async (req) => {
       .from('ai_calls')
       .insert({
         user_id: userId,
-        model: model(),
+        model: isEval ? `${model()} (eval ${PROMPT_VERSION})` : `${model()} (${PROMPT_VERSION})`,
         pages: images.length,
         prompt_tokens: usage.prompt_tokens ?? null,
         completion_tokens: usage.completion_tokens ?? null,

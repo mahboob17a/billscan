@@ -18,6 +18,7 @@ export const billSchema = {
     required: [
       'vendor_name',
       'vendor_vat_no',
+      'vendor_vat_registered',
       'bill_no',
       'bill_date',
       'taxable_amount',
@@ -36,6 +37,7 @@ export const billSchema = {
     properties: {
       vendor_name: nullableString,
       vendor_vat_no: nullableString,
+      vendor_vat_registered: { type: 'boolean', description: "True only if the VENDOR's own VAT number is printed." },
       bill_no: nullableString,
       bill_date: { ...nullableString, description: 'ISO date YYYY-MM-DD' },
       taxable_amount: { ...nullableNumber, description: 'OMR, 3 decimals. Net value on which VAT is charged.' },
@@ -62,6 +64,7 @@ export const billSchema = {
 export interface BillExtraction {
   vendor_name: string | null;
   vendor_vat_no: string | null;
+  vendor_vat_registered: boolean;
   bill_no: string | null;
   bill_date: string | null;
   taxable_amount: number | null;

@@ -1,0 +1,36 @@
+# Accuracy test for the AI bill reader. Run by hand from the Actions tab
+# (or by Claude) after changing the prompt or model.
+# The bill photos are stored encrypted in eval/samples.tar.gz.enc; the key and the
+# eval token are repository secrets, so the photos never appear in the public repo.
+name: AI accuracy test
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'OpenAI model to test (blank = server default)'
+        required: false
+        default: ''
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Decrypt sample bills
+        env:
+          EVAL_ARCHIVE_KEY: ${{ secrets.EVAL_ARCHIVE_KEY }}
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:EVAL_ARCHIVE_KEY \
+            -in eval/samples.tar.gz.enc | tar -xz -C eval
+          ls eval/samples | wc -l
+      - name: Run accuracy test
+        env:
+          EVAL_URL: https://zjcgjhxvlzheqtpkyfxi.supabase.co/functions/v1/extract-bill
+          EVAL_TOKEN: ${{ secrets.EVAL_TOKEN }}
+          EVAL_MODEL: ${{ inputs.model }}
+        run: node scripts/eval-extraction.mjs eval/samples

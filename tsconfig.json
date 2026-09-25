@@ -9,7 +9,8 @@
     },
     "types": [
       "jest"
-    ]
+    ],
+    "resolveJsonModule": true
   },
   "include": [
     "**/*.ts",
