@@ -134,16 +134,21 @@ export default function Export() {
         ) : null}
 
         <Card style={{ gap: 0, paddingVertical: 4 }}>
-          {s?.sections.map((sec, i) => (
-            <Line
-              key={sec.section}
-              first={i === 0}
-              label={`${SECTION_INFO[sec.section].letter} · ${SECTION_INFO[sec.section].title}`}
-              meta={`${sec.bills} ${sec.bills === 1 ? 'bill' : 'bills'}`}
-              value={formatOmr(sec.total, { thousands: true })}
-            />
-          ))}
-          <Line label="B · Cancelled" meta={`${s?.cancelledBills ?? 0} · not counted`} value="—" />
+          {/* Report order: A, B (cancelled), C, D, E */}
+          {s?.sections.flatMap((sec, i) => {
+            const line = (
+              <Line
+                key={sec.section}
+                first={i === 0}
+                label={`${SECTION_INFO[sec.section].letter} · ${SECTION_INFO[sec.section].title}`}
+                meta={`${sec.bills} ${sec.bills === 1 ? 'bill' : 'bills'}`}
+                value={formatOmr(sec.total, { thousands: true })}
+              />
+            );
+            return sec.section === 'MATERIAL'
+              ? [line, <Line key="CANCELLED" label="B · Cancelled" meta={`${s.cancelledBills} · not counted`} value="—" />]
+              : [line];
+          })}
           <Line label="Total purchase value" value={s ? formatOmr(s.purchases, { thousands: true }) : '—'} strong />
           <Line label="F · Cash received" meta={`${s?.cashEntries ?? 0} ${s?.cashEntries === 1 ? 'entry' : 'entries'}`} value={s ? formatOmr(s.cashReceived, { thousands: true }) : '—'} />
           <Line label="Balance due (payable by cashier)" value={s ? formatOmr(s.balanceDue, { thousands: true }) : '—'} strong highlight />

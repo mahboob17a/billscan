@@ -94,22 +94,30 @@ export default function Dashboard() {
         ) : null}
 
         <Card style={{ gap: 0, paddingVertical: 4 }}>
-          {s?.sections.map((sec, i) => (
-            <Row
-              key={sec.section}
-              first={i === 0}
-              title={`${SECTION_INFO[sec.section].letter} · ${SECTION_INFO[sec.section].title}`}
-              meta={sec.bills === 0 ? 'No bills yet' : `${sec.bills} ${sec.bills === 1 ? 'bill' : 'bills'}`}
-              amount={sec.bills === 0 ? '—' : formatOmr(sec.total, { thousands: true })}
-              onPress={() => router.push({ pathname: '/bills/[kind]', params: { kind: sec.section } })}
-            />
-          ))}
-          <Row
-            title="B · Cancelled"
-            meta={s && s.cancelledBills > 0 ? `${s.cancelledBills} ${s.cancelledBills === 1 ? 'bill' : 'bills'} · not counted` : 'None'}
-            amount="—"
-            onPress={() => router.push('/bills/cancelled')}
-          />
+          {/* Report order: A, B (cancelled), C, D, E, F */}
+          {s?.sections.flatMap((sec, i) => {
+            const row = (
+              <Row
+                key={sec.section}
+                first={i === 0}
+                title={`${SECTION_INFO[sec.section].letter} · ${SECTION_INFO[sec.section].title}`}
+                meta={sec.bills === 0 ? 'No bills yet' : `${sec.bills} ${sec.bills === 1 ? 'bill' : 'bills'}`}
+                amount={sec.bills === 0 ? '—' : formatOmr(sec.total, { thousands: true })}
+                onPress={() => router.push({ pathname: '/bills/[kind]', params: { kind: sec.section } })}
+              />
+            );
+            if (sec.section !== 'MATERIAL') return [row];
+            return [
+              row,
+              <Row
+                key="CANCELLED"
+                title="B · Cancelled"
+                meta={s.cancelledBills > 0 ? `${s.cancelledBills} ${s.cancelledBills === 1 ? 'bill' : 'bills'} · not counted` : 'None'}
+                amount="—"
+                onPress={() => router.push('/bills/cancelled')}
+              />,
+            ];
+          })}
           <Row
             title="F · Cash received"
             meta={s && s.cashEntries > 0 ? `${s.cashEntries} ${s.cashEntries === 1 ? 'entry' : 'entries'}` : 'No entries yet'}
