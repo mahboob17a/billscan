@@ -6,7 +6,7 @@
 //        with Authorization: Bearer <user access token> → extraction JSON
 //
 // Secrets:  OPENAI_API_KEY (required), OPENAI_MODEL (optional)
-// Provided by Supabase: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+// Provided by Supabase: SUPABASE_URL, SUPABASE_SECRET_KEYS (or legacy SUPABASE_SERVICE_ROLE_KEY)
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -34,6 +34,18 @@ function json(body: unknown, status = 200): Response {
 const env = (k: string) => Deno.env.get(k) ?? '';
 const model = () => env('OPENAI_MODEL') || 'gpt-4.1-mini';
 
+/** Server-only key: new-style SUPABASE_SECRET_KEYS (JSON), falling back to the legacy service role key. */
+function serviceKey(): string {
+  try {
+    const keys = JSON.parse(env('SUPABASE_SECRET_KEYS') || '{}') as Record<string, string>;
+    const k = keys.default ?? Object.values(keys)[0];
+    if (k) return k;
+  } catch {
+    // ignore malformed value and fall back
+  }
+  return env('SUPABASE_SERVICE_ROLE_KEY');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Use POST.' }, 405);
@@ -54,7 +66,7 @@ Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
   if (!token) return json({ error: 'Sign in required.' }, 401);
 
-  const admin = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), {
+  const admin = createClient(env('SUPABASE_URL'), serviceKey(), {
     auth: { persistSession: false },
   });
   const { data: userData, error: userError } = await admin.auth.getUser(token);
