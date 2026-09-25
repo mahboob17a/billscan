@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto';
-import { DEFAULT_REF_PATTERN, MonthId, statementRef } from '@/lib/months';
+import { DEFAULT_REF_PATTERN, MonthId, shiftMonth, statementRef } from '@/lib/months';
 import { Baisa } from '@/lib/money';
 import { getDb } from './index';
 import { DEFAULT_DESCRIPTIONS, Section, SECTIONS } from './schema';
@@ -199,8 +199,11 @@ export interface MonthSummary {
   sections: SectionTotal[];
   cancelledBills: number;
   purchases: Baisa;
-  cashReceived: Baisa;
+  broughtForward: Baisa; // Section F
+  broughtForwardEntries: number;
+  cashReceived: Baisa; // Section G
   cashEntries: number;
+  /** Purchases − cash brought forward − cash received. Negative = cash left with the supervisor. */
   balanceDue: Baisa;
   draftsToReview: number;
 }
@@ -297,11 +300,13 @@ export async function getMonthSummary(userId: string, month: MonthId): Promise<M
     userId,
     month,
   );
-  const cash = await db.getFirstAsync<{ n: number; total: number | null }>(
-    'SELECT COUNT(*) AS n, SUM(amount) AS total FROM cash_entry WHERE user_id = ? AND month = ?',
+  const cashRows = await db.getAllAsync<{ kind: CashKind; n: number; total: number | null }>(
+    'SELECT kind, COUNT(*) AS n, SUM(amount) AS total FROM cash_entry WHERE user_id = ? AND month = ? GROUP BY kind',
     userId,
     month,
   );
+  const cash = cashRows.find((c) => c.kind === 'received');
+  const bf = cashRows.find((c) => c.kind === 'brought_forward');
   const ref = await db.getFirstAsync<{ statement_ref: string }>(
     'SELECT statement_ref FROM report_month WHERE user_id = ? AND month = ?',
     userId,
@@ -309,37 +314,69 @@ export async function getMonthSummary(userId: string, month: MonthId): Promise<M
   );
   const purchases = sections.reduce((a, s) => a + s.total, 0);
   const cashReceived = cash?.total ?? 0;
+  const broughtForward = bf?.total ?? 0;
   return {
     month,
     statementRef: ref?.statement_ref ?? '',
     sections,
     cancelledBills: cancelled?.n ?? 0,
     purchases,
+    broughtForward,
+    broughtForwardEntries: bf?.n ?? 0,
     cashReceived,
     cashEntries: cash?.n ?? 0,
-    balanceDue: purchases - cashReceived,
+    balanceDue: purchases - broughtForward - cashReceived,
     draftsToReview: drafts?.n ?? 0,
   };
 }
 
-// ── Cash received (Section F) ─────────────────────────────────────────────
+// ── Cash: brought forward (Section F) and received from cashier (Section G) ──
+
+export type CashKind = 'received' | 'brought_forward';
 
 export interface CashEntry {
   id: string;
+  kind: CashKind;
   entryDate: string;
   description: string;
   amount: Baisa;
   remarks: string;
 }
 
-export async function listCashEntries(userId: string, month: MonthId): Promise<CashEntry[]> {
+export async function listCashEntries(userId: string, month: MonthId, kind?: CashKind): Promise<CashEntry[]> {
   const db = await getDb();
-  const rows = await db.getAllAsync<{ id: string; entry_date: string; description: string; amount: number; remarks: string }>(
-    'SELECT id, entry_date, description, amount, remarks FROM cash_entry WHERE user_id = ? AND month = ? ORDER BY entry_date, created_at',
+  const rows = await db.getAllAsync<{ id: string; kind: CashKind; entry_date: string; description: string; amount: number; remarks: string }>(
+    `SELECT id, kind, entry_date, description, amount, remarks FROM cash_entry
+      WHERE user_id = ? AND month = ? ${kind ? 'AND kind = ?' : ''} ORDER BY entry_date, created_at`,
+    ...(kind ? [userId, month, kind] : [userId, month]),
+  );
+  return rows.map((r) => ({ id: r.id, kind: r.kind, entryDate: r.entry_date, description: r.description, amount: r.amount, remarks: r.remarks }));
+}
+
+/**
+ * Cash the supervisor still held at the end of the previous month (its balance due was
+ * negative) — offered as this month's Section F entry. Null when nothing is left over
+ * or when this month already has a brought-forward entry.
+ */
+export async function carryForwardSuggestion(userId: string, month: MonthId): Promise<{ fromMonth: MonthId; amount: Baisa } | null> {
+  const db = await getDb();
+  const existing = await db.getFirstAsync<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM cash_entry WHERE user_id = ? AND month = ? AND kind = 'brought_forward'",
     userId,
     month,
   );
-  return rows.map((r) => ({ id: r.id, entryDate: r.entry_date, description: r.description, amount: r.amount, remarks: r.remarks }));
+  if (existing && existing.n > 0) return null;
+  const prev = shiftMonth(month, -1);
+  const has = await db.getFirstAsync<{ n: number }>(
+    "SELECT (SELECT COUNT(*) FROM bill WHERE user_id = ? AND month = ? AND status = 'saved') + (SELECT COUNT(*) FROM cash_entry WHERE user_id = ? AND month = ?) AS n",
+    userId,
+    prev,
+    userId,
+    prev,
+  );
+  if (!has || has.n === 0) return null;
+  const s = await getMonthSummary(userId, prev);
+  return s.balanceDue < 0 ? { fromMonth: prev, amount: -s.balanceDue } : null;
 }
 
 export async function addCashEntry(
@@ -350,10 +387,11 @@ export async function addCashEntry(
   await ensureMonth(userId, month);
   const db = await getDb();
   await db.runAsync(
-    'INSERT INTO cash_entry (id, user_id, month, entry_date, description, amount, remarks, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO cash_entry (id, user_id, month, kind, entry_date, description, amount, remarks, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     Crypto.randomUUID(),
     userId,
     month,
+    e.kind,
     e.entryDate,
     e.description,
     e.amount,

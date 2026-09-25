@@ -7,7 +7,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import reportTemplate from '../../assets/templates/DTR-PUR-UTAS-NIZWA-template.xlsx';
 import { listBills } from '@/db/bills';
-import { getReportMonth, getReportSettings, listCashEntries, markMonthExported } from '@/db/repo';
+import { CashEntry, getReportMonth, getReportSettings, listCashEntries, markMonthExported } from '@/db/repo';
 import { SECTIONS, Section } from '@/db/schema';
 import { MonthId, monthLabel } from '@/lib/months';
 import type { ReportBillRow, ReportData, ReportTotals } from './sheet';
@@ -15,6 +15,8 @@ import { nextRevision, reportFileName } from './naming';
 import { buildReportXlsx } from './workbook';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+const toCashRow = (e: CashEntry) => ({ entryDate: e.entryDate, description: e.description, amount: e.amount, remarks: e.remarks });
 
 export async function collectReportData(userId: string, month: MonthId, datePrepared: string): Promise<ReportData> {
   const [settings, rm, cash, cancelled, ...perSection] = await Promise.all([
@@ -46,7 +48,8 @@ export async function collectReportData(userId: string, month: MonthId, datePrep
     submittedTo: settings.submittedTo,
     sections,
     cancelled: cancelled.map(toRow),
-    cash: cash.map((e) => ({ entryDate: e.entryDate, description: e.description, amount: e.amount, remarks: e.remarks })),
+    broughtForward: cash.filter((e) => e.kind === 'brought_forward').map(toCashRow),
+    cash: cash.filter((e) => e.kind === 'received').map(toCashRow),
   };
 }
 

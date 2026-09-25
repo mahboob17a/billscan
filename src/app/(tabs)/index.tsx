@@ -94,7 +94,7 @@ export default function Dashboard() {
         ) : null}
 
         <Card style={{ gap: 0, paddingVertical: 4 }}>
-          {/* Report order: A, B (cancelled), C, D, E, F */}
+          {/* Report order: A, B (cancelled), C, D, E, F (brought forward), G (cash received) */}
           {s?.sections.flatMap((sec, i) => {
             const row = (
               <Row
@@ -119,10 +119,16 @@ export default function Dashboard() {
             ];
           })}
           <Row
-            title="F · Cash received"
+            title="F · Cash brought forward"
+            meta={s && s.broughtForwardEntries > 0 ? 'From last month' : 'None'}
+            amount={s && s.broughtForwardEntries > 0 ? formatOmr(s.broughtForward, { thousands: true }) : '—'}
+            onPress={() => router.navigate({ pathname: '/cash', params: { kind: 'brought_forward' } })}
+          />
+          <Row
+            title="G · Cash received"
             meta={s && s.cashEntries > 0 ? `${s.cashEntries} ${s.cashEntries === 1 ? 'entry' : 'entries'}` : 'No entries yet'}
             amount={s && s.cashEntries > 0 ? formatOmr(s.cashReceived, { thousands: true }) : '—'}
-            onPress={() => router.navigate('/cash')}
+            onPress={() => router.navigate({ pathname: '/cash', params: { kind: 'received' } })}
           />
         </Card>
         <View style={{ height: 88 }} />

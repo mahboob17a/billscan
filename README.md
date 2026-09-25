@@ -52,6 +52,8 @@ Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** 
 - [x] Crash and error reports: saved on the phone, uploaded to Supabase `app_errors` (admins read); friendly error screen
 - [x] AI usage this month (calls, pages, tokens) in System check
 
+**Report v2 (v0.6.0):** 8 sections as in the updated DTR template — A Material, B Cancelled, C Sewage, D Tools, E Fuel, F Cash Brought Forward from Last Month, G Cash Received from Cashier, H Reconciliation (Balance Due = Purchases − Brought Forward − Cash Received). The Cash tab offers last month's leftover cash as this month's F entry.
+
 Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout

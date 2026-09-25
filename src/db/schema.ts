@@ -131,4 +131,8 @@ export const MIGRATIONS: string[] = [
     uploaded    INTEGER NOT NULL DEFAULT 0
   );
   `,
+  // 5 — Section F "Cash brought forward from last month" shares the cash table with Section G "Cash received"
+  `
+  ALTER TABLE cash_entry ADD COLUMN kind TEXT NOT NULL DEFAULT 'received';
+  `,
 ];

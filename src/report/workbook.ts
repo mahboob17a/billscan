@@ -16,12 +16,12 @@ const TEMPLATE_STYLE_CELLS: Record<string, keyof ReportStyles> = {
   A10: 'bar',
   A11: 'colHead',
   A12: 'empty',
-  A35: 'reconLabel',
-  H35: 'reconValue',
-  I35: 'omr',
-  A38: 'balLabel',
-  H38: 'balValue',
-  I38: 'balOmr',
+  A38: 'reconLabel',
+  H38: 'reconValue',
+  I38: 'omr',
+  A41: 'balLabel',
+  H41: 'balValue',
+  I41: 'balOmr',
 };
 
 const FALLBACK: Partial<ReportStyles> = {

@@ -150,8 +150,18 @@ export default function Export() {
               : [line];
           })}
           <Line label="Total purchase value" value={s ? formatOmr(s.purchases, { thousands: true }) : '—'} strong />
-          <Line label="F · Cash received" meta={`${s?.cashEntries ?? 0} ${s?.cashEntries === 1 ? 'entry' : 'entries'}`} value={s ? formatOmr(s.cashReceived, { thousands: true }) : '—'} />
-          <Line label="Balance due (payable by cashier)" value={s ? formatOmr(s.balanceDue, { thousands: true }) : '—'} strong highlight />
+          <Line
+            label="F · Cash brought forward"
+            meta="From last month"
+            value={s ? formatOmr(s.broughtForward, { thousands: true }) : '—'}
+          />
+          <Line label="G · Cash received" meta={`${s?.cashEntries ?? 0} ${s?.cashEntries === 1 ? 'entry' : 'entries'}`} value={s ? formatOmr(s.cashReceived, { thousands: true }) : '—'} />
+          <Line
+            label={s && s.balanceDue < 0 ? 'H · Balance (cash left with you)' : 'H · Balance due (payable by cashier)'}
+            value={s ? formatOmr(Math.abs(s.balanceDue), { thousands: true }) : '—'}
+            strong
+            highlight
+          />
         </Card>
 
         <Field
@@ -188,7 +198,7 @@ export default function Export() {
         <Text style={[styles.note, { color: c.textMuted }]}>
           {billCount === 0
             ? `No saved bills in ${monthLabel(month)} yet. The report will show “No … bills recorded” in every section.`
-            : 'The file uses your DTR template: sections A–G, sub-totals and the reconciliation are Excel formulas, so totals stay correct if head office edits a cell.'}
+            : 'The file uses your DTR template: sections A–H, sub-totals and the reconciliation are Excel formulas, so totals stay correct if head office edits a cell.'}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

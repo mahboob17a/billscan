@@ -3,8 +3,8 @@
  * Pure string work — no React Native APIs — so it is unit-tested in Node.
  *
  * Layout follows the DTR template: header block, Sections A–E (one row per bill,
- * with a sub-total under each section that has bills), Section F cash received,
- * Section G reconciliation with live formulas. Every formula also carries its
+ * with a sub-total under each section that has bills), Section F cash brought forward,
+ * Section G cash received, Section H reconciliation with live formulas. Every formula also carries its
  * computed value, so phone viewers that don't recalculate still show the totals.
  */
 import type { Section } from '@/db/schema';
@@ -39,7 +39,8 @@ export interface ReportData {
   submittedTo: string;
   sections: Record<Section, ReportBillRow[]>;
   cancelled: ReportBillRow[];
-  cash: ReportCashRow[];
+  broughtForward: ReportCashRow[]; // Section F
+  cash: ReportCashRow[]; // Section G
 }
 
 /** Style indexes (cellXfs) in the workbook's styles.xml. */
@@ -72,7 +73,8 @@ export interface ReportTotals {
   sections: Record<Section, Baisa>;
   cancelled: Baisa;
   purchases: Baisa; // A + C + D + E (B excluded)
-  cashReceived: Baisa;
+  broughtForward: Baisa; // F
+  cashReceived: Baisa; // G
   balanceDue: Baisa;
   billCount: number;
 }
@@ -255,47 +257,58 @@ export function buildSheetXml(templateXml: string, d: ReportData, s: ReportStyle
     w.skip();
   }
 
-  // Section F — cash received
-  w.wide('Section F — Cash Received from Cashier', s.bar, 20);
-  const fh = w.r + 1;
-  w.row([
-    str(`A${fh}`, s.colHead, 'S. No'),
-    str(`B${fh}`, s.colHead, 'Date'),
-    str(`C${fh}`, s.colHead, 'Description'),
-    ...['D', 'E', 'F', 'G'].map((c) => blank(`${c}${fh}`, s.colHead)),
-    str(`H${fh}`, s.colHead, 'Amount'),
-    str(`I${fh}`, s.colHead, 'Remarks'),
-  ]);
-  w.merge('C', 'G');
-  let cashRef: string | null = null;
-  const cashTotal = d.cash.reduce((a, e) => a + e.amount, 0);
-  if (d.cash.length === 0) {
-    w.wide('No cash received recorded during the period.', s.empty);
-  } else {
-    const first = w.r + 1;
-    d.cash.forEach((e, i) => {
-      const n = w.r + 1;
-      w.row(
-        [
-          num(`A${n}`, s.dCenter, i + 1),
-          num(`B${n}`, s.dDate, excelSerial(e.entryDate)),
-          str(`C${n}`, s.dText, e.description),
-          ...['D', 'E', 'F', 'G'].map((c) => blank(`${c}${n}`, s.dText)),
-          num(`H${n}`, s.dAmount, omrText(e.amount)),
-          str(`I${n}`, s.dRemarks, e.remarks),
-        ],
-        heightFor(e.remarks, ''),
-      );
-      w.merge('C', 'G');
-    });
-    cashRef = subtotalRow(w, 'Total cash received', first, w.r, cashTotal, s);
-  }
-  w.skip();
+  // Sections F (cash brought forward) and G (cash received) share one layout.
+  const cashSection = (title: string, emptyText: string, totalLabel: string, rows: ReportCashRow[]): { ref: string | null; total: Baisa } => {
+    w.wide(title, s.bar, 20);
+    const hn = w.r + 1;
+    w.row([
+      str(`A${hn}`, s.colHead, 'S. No'),
+      str(`B${hn}`, s.colHead, 'Date'),
+      str(`C${hn}`, s.colHead, 'Description'),
+      ...['D', 'E', 'F', 'G'].map((c) => blank(`${c}${hn}`, s.colHead)),
+      str(`H${hn}`, s.colHead, 'Amount'),
+      str(`I${hn}`, s.colHead, 'Remarks'),
+    ]);
+    w.merge('C', 'G');
+    const total = rows.reduce((a, e) => a + e.amount, 0);
+    let ref: string | null = null;
+    if (rows.length === 0) {
+      w.wide(emptyText, s.empty);
+    } else {
+      const first = w.r + 1;
+      rows.forEach((e, i) => {
+        const n = w.r + 1;
+        w.row(
+          [
+            num(`A${n}`, s.dCenter, i + 1),
+            num(`B${n}`, s.dDate, excelSerial(e.entryDate)),
+            str(`C${n}`, s.dText, e.description),
+            ...['D', 'E', 'F', 'G'].map((c) => blank(`${c}${n}`, s.dText)),
+            num(`H${n}`, s.dAmount, omrText(e.amount)),
+            str(`I${n}`, s.dRemarks, e.remarks),
+          ],
+          heightFor(e.remarks, ''),
+        );
+        w.merge('C', 'G');
+      });
+      ref = subtotalRow(w, totalLabel, first, w.r, total, s);
+    }
+    w.skip();
+    return { ref, total };
+  };
+  const bf = cashSection(
+    'Section F — Cash Brought Forward from Last Month',
+    'No cash brought forward from last month.',
+    'Total brought forward',
+    d.broughtForward,
+  );
+  const cash = cashSection('Section G — Cash Received from Cashier', 'No cash received recorded during the period.', 'Total cash received', d.cash);
 
-  // Section G — reconciliation (live formulas)
+  // Section H — reconciliation (live formulas)
+  // Balance due = purchases − cash already in hand from last month − cash received this month.
   const purchases = Object.values(sectionTotals).reduce((a, b) => a + b, 0);
-  const balance = purchases - cashTotal;
-  w.wide('Section G — Reconciliation Summary', s.bar, 20);
+  const balance = purchases - bf.total - cash.total;
+  w.wide('Section H — Reconciliation Summary', s.bar, 20);
   const reconRow = (label: string, formula: string, value: Baisa, ls: number, vs: number, os: number) => {
     const n = w.r + 1;
     w.row([
@@ -307,9 +320,9 @@ export function buildSheetXml(templateXml: string, d: ReportData, s: ReportStyle
     return `H${n}`;
   };
   const pRef = reconRow('TOTAL PURCHASE VALUE', purchaseRefs.length ? purchaseRefs.join('+') : '0', purchases, s.reconLabel, s.reconValue, s.omr);
-  const cRef = reconRow('TOTAL CASH RECEIVED', cashRef ?? '0', cashTotal, s.reconLabel, s.reconValue, s.omr);
-  w.skip();
-  reconRow('BALANCE DUE (Payable by Cashier)', `${pRef}-${cRef}`, balance, s.balLabel, s.balValue, s.balOmr);
+  const bRef = reconRow('CASH BROUGHT FORWARD FROM LAST MONTH', bf.ref ?? '0', bf.total, s.reconLabel, s.reconValue, s.omr);
+  const cRef = reconRow('CASH RECEIVED FROM CASHIER', cash.ref ?? '0', cash.total, s.reconLabel, s.reconValue, s.omr);
+  reconRow('BALANCE DUE (Payable by Cashier)', `${pRef}-${bRef}-${cRef}`, balance, s.balLabel, s.balValue, s.balOmr);
 
   const sheetData = `<sheetData>${w.rows.join('')}</sheetData>`;
   const mergeCells = `<mergeCells count="${w.merges.length}">${w.merges.map((m) => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>`;
@@ -327,7 +340,8 @@ export function buildSheetXml(templateXml: string, d: ReportData, s: ReportStyle
       sections: sectionTotals,
       cancelled: cancelledTotal,
       purchases,
-      cashReceived: cashTotal,
+      broughtForward: bf.total,
+      cashReceived: cash.total,
       balanceDue: balance,
       billCount,
     },

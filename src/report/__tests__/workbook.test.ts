@@ -32,6 +32,7 @@ const SAMPLE: ReportData = {
     FUEL: [],
   },
   cancelled: [bill({ billNo: '999', grandTotal: 5000, shopRate: 5000 })],
+  broughtForward: [{ entryDate: '2026-09-01', description: 'Balance from August 2026', amount: 10000, remarks: 'Cash in hand' }],
   cash: [{ entryDate: '2026-09-02', description: 'Petty cash float', amount: 50000, remarks: 'Cashier' }],
 };
 
@@ -43,13 +44,14 @@ describe('report workbook', () => {
     expect(xmlEscape('a<b>&"')).toBe('a&lt;b&gt;&amp;&quot;');
   });
 
-  it('builds totals: cancelled excluded, balance = purchases − cash', () => {
+  it('builds totals: cancelled excluded, balance = purchases − brought forward − cash received', () => {
     const { totals } = buildReportXlsx(template, SAMPLE);
     expect(totals.sections.MATERIAL).toBe(54500);
     expect(totals.purchases).toBe(65000);
     expect(totals.cancelled).toBe(5000);
+    expect(totals.broughtForward).toBe(10000);
     expect(totals.cashReceived).toBe(50000);
-    expect(totals.balanceDue).toBe(15000);
+    expect(totals.balanceDue).toBe(5000);
     expect(totals.billCount).toBe(4);
   });
 
@@ -60,7 +62,11 @@ describe('report workbook', () => {
     expect(sheet).toContain('<f>SUM(H12:H14)</f><v>54.500</v>');
     expect(sheet).toContain('Handwritten memo &lt;A&amp;B&gt;');
     expect(sheet).toMatch(/<f>H\d+\+H\d+<\/f><v>65\.000<\/v>/);
-    expect(sheet).toMatch(/<f>H\d+-H\d+<\/f><v>15\.000<\/v>/);
+    expect(sheet).toMatch(/<f>H\d+-H\d+-H\d+<\/f><v>5\.000<\/v>/);
+    expect(sheet).toContain('Section F — Cash Brought Forward from Last Month');
+    expect(sheet).toContain('Section G — Cash Received from Cashier');
+    expect(sheet).toContain('Section H — Reconciliation Summary');
+    expect(sheet).toContain('CASH BROUGHT FORWARD FROM LAST MONTH');
     expect(sheet).toContain('<cols>');
     expect(sheet).toContain('<pageSetup');
     expect(strFromU8(files['xl/workbook.xml'])).toContain('fullCalcOnLoad="1"');
@@ -68,9 +74,10 @@ describe('report workbook', () => {
   });
 
   it('empty month keeps every "No … recorded" line and zero totals', () => {
-    const { bytes, totals } = buildReportXlsx(template, { ...SAMPLE, sections: { MATERIAL: [], SEWAGE: [], TOOLS: [], FUEL: [] }, cancelled: [], cash: [] });
+    const { bytes, totals } = buildReportXlsx(template, { ...SAMPLE, sections: { MATERIAL: [], SEWAGE: [], TOOLS: [], FUEL: [] }, cancelled: [], broughtForward: [], cash: [] });
     const sheet = strFromU8(unzipSync(bytes)['xl/worksheets/sheet1.xml']);
     expect(sheet.match(/recorded during the period\./g)).toHaveLength(6);
+    expect(sheet).toContain('No cash brought forward from last month.');
     expect(totals.balanceDue).toBe(0);
     if (process.env.REPORT_OUT_EMPTY) fs.writeFileSync(process.env.REPORT_OUT_EMPTY, bytes);
   });
