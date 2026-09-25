@@ -59,6 +59,8 @@ function RootStack() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="system-check" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="report-settings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="bill/[id]" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="bills/[kind]" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
     </Stack>
   );

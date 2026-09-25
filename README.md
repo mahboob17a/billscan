@@ -28,6 +28,14 @@ Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** 
 - [x] Cash received (Section F) add / delete, feeding the balance due
 - [x] Settings: name and designation, quick unlock, report header, system check, sign out
 
+**Phase 2 — Scan and review: built (v0.3.0).**
+- [x] Scan with the camera (ML Kit document scanner, up to 3 pages), pick from the gallery, or enter by hand
+- [x] Photos kept with each bill (resized ~1600 px); the AI reads them through `extract-bill` (prompt v0.3)
+- [x] Review screen: photo zoom, checks (sum, 5% VAT, missing fields, other month), description chips, discount type, VAT-from-total
+- [x] Save / keep as draft / mark cancelled (Section B) / delete, with a duplicate warning
+- [x] Section lists (A, B, C, D, E) and drafts list from the dashboard
+- [x] Accuracy test on 16 real bills (GitHub Actions → "AI accuracy test")
+
 Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout

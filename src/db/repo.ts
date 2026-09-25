@@ -86,6 +86,29 @@ export async function ensureUserSetup(userId: string, preparedBy: string): Promi
   }
 }
 
+// ── Description list (one label per bill) ─────────────────────────────────
+
+export interface DescriptionItem {
+  label: string;
+  section: Section;
+}
+
+export async function listDescriptions(userId: string): Promise<DescriptionItem[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<DescriptionItem>(
+    'SELECT label, section FROM description_catalog WHERE user_id = ? AND active = 1 ORDER BY sort, label',
+    userId,
+  );
+  return rows.length ? rows : DEFAULT_DESCRIPTIONS;
+}
+
+/** The list grouped by section, as sent to the AI. */
+export function descriptionsBySection(items: DescriptionItem[]): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const d of items) (out[d.section] ??= []).push(d.label);
+  return out;
+}
+
 // ── Month summary (dashboard) ─────────────────────────────────────────────
 
 export interface SectionTotal {

@@ -24,6 +24,7 @@ export const DEFAULT_DESCRIPTIONS: { label: string; section: Section }[] = [
   { label: 'Tiles', section: 'MATERIAL' },
   { label: 'Civil Material', section: 'MATERIAL' },
   { label: 'Consumables', section: 'MATERIAL' },
+  { label: 'Repair Service', section: 'MATERIAL' },
   { label: 'Sewage Removal', section: 'SEWAGE' },
   { label: 'Septic Tank Cleaning', section: 'SEWAGE' },
   { label: 'Drain Jetting', section: 'SEWAGE' },
@@ -104,5 +105,10 @@ export const MIGRATIONS: string[] = [
     sort     INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, label)
   );
+  `,
+  // 2 — "Repair Service" description (rewinding, repairs) for users set up before it existed
+  `
+  INSERT OR IGNORE INTO description_catalog (user_id, label, section, active, sort)
+    SELECT DISTINCT user_id, 'Repair Service', 'MATERIAL', 1, 8 FROM description_catalog;
   `,
 ];

@@ -3,7 +3,7 @@
     "name": "BillScan",
     "slug": "billscan",
     "scheme": "billscan",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.daryas.billscan",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#1B2230",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -54,7 +54,20 @@
       ],
       "expo-font",
       "expo-asset",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BillScan opens your photos so you can add a bill you already photographed.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "react-native-document-scanner-plugin",
+        {
+          "cameraPermission": "BillScan uses the camera to scan your purchase bills."
+        }
+      ]
     ]
   }
 }

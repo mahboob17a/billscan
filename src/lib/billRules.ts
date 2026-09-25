@@ -8,8 +8,7 @@
  * - VAT is copied as printed. It is only worked out when a VAT-registered vendor prints just a total.
  */
 import type { Section } from '@/db/schema';
-import { Baisa, splitInclusiveTotal, toBaisa, vatOn } from './money';
-import { formatOmr } from './money';
+import { Baisa, formatOmr, splitInclusiveTotal, toBaisa, vatOn } from './money';
 import { monthIdOfIsoDate, monthLabel, MonthId } from './months';
 
 export type DiscountType = 'before_vat' | 'after_vat' | 'none';

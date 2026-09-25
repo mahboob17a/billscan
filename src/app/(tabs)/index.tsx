@@ -70,11 +70,14 @@ export default function Dashboard() {
         </View>
 
         {s && s.draftsToReview > 0 ? (
-          <Card style={{ borderColor: c.warning, backgroundColor: c.warningSoft }}>
-            <Text style={{ color: c.warning, fontFamily: fonts.semibold }}>
-              {s.draftsToReview} scanned {s.draftsToReview === 1 ? 'bill needs' : 'bills need'} checking before saving
-            </Text>
-          </Card>
+          <Pressable onPress={() => router.push('/bills/drafts')} accessibilityRole="button">
+            <Card style={{ borderColor: c.warning, backgroundColor: c.warningSoft, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ flex: 1, color: c.warning, fontFamily: fonts.semibold }}>
+                {s.draftsToReview} scanned {s.draftsToReview === 1 ? 'bill needs' : 'bills need'} checking before saving
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={c.warning} />
+            </Card>
+          </Pressable>
         ) : null}
 
         <Card style={{ gap: 0, paddingVertical: 4 }}>
@@ -85,12 +88,14 @@ export default function Dashboard() {
               title={`${SECTION_INFO[sec.section].letter} · ${SECTION_INFO[sec.section].title}`}
               meta={sec.bills === 0 ? 'No bills yet' : `${sec.bills} ${sec.bills === 1 ? 'bill' : 'bills'}`}
               amount={sec.bills === 0 ? '—' : formatOmr(sec.total, { thousands: true })}
+              onPress={() => router.push({ pathname: '/bills/[kind]', params: { kind: sec.section } })}
             />
           ))}
           <Row
             title="B · Cancelled"
             meta={s && s.cancelledBills > 0 ? `${s.cancelledBills} ${s.cancelledBills === 1 ? 'bill' : 'bills'} · not counted` : 'None'}
             amount="—"
+            onPress={() => router.push('/bills/cancelled')}
           />
           <Row
             title="F · Cash received"
