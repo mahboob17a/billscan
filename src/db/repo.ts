@@ -354,9 +354,11 @@ export async function listCashEntries(userId: string, month: MonthId, kind?: Cas
 }
 
 /**
- * Cash the supervisor still held at the end of the previous month (its balance due was
- * negative) — offered as this month's Section F entry. Null when nothing is left over
- * or when this month already has a brought-forward entry.
+ * Last month's closing balance, offered as this month's Section F entry:
+ * positive = cash still with the supervisor (last month's balance was negative),
+ * negative = money he spent from his own pocket that the cashier has not paid back
+ * (last month's balance due was positive). Null when last month balances to zero,
+ * has no data, or this month already has a brought-forward entry.
  */
 export async function carryForwardSuggestion(userId: string, month: MonthId): Promise<{ fromMonth: MonthId; amount: Baisa } | null> {
   const db = await getDb();
@@ -376,7 +378,7 @@ export async function carryForwardSuggestion(userId: string, month: MonthId): Pr
   );
   if (!has || has.n === 0) return null;
   const s = await getMonthSummary(userId, prev);
-  return s.balanceDue < 0 ? { fromMonth: prev, amount: -s.balanceDue } : null;
+  return s.balanceDue !== 0 ? { fromMonth: prev, amount: -s.balanceDue } : null;
 }
 
 export async function addCashEntry(

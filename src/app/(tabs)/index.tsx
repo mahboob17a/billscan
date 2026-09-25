@@ -120,7 +120,13 @@ export default function Dashboard() {
           })}
           <Row
             title="F · Cash brought forward"
-            meta={s && s.broughtForwardEntries > 0 ? 'From last month' : 'None'}
+            meta={
+              s && s.broughtForwardEntries > 0
+                ? s.broughtForward < 0
+                  ? 'Spent from your pocket last month'
+                  : 'Cash left with you from last month'
+                : 'None'
+            }
             amount={s && s.broughtForwardEntries > 0 ? formatOmr(s.broughtForward, { thousands: true }) : '—'}
             onPress={() => router.navigate({ pathname: '/cash', params: { kind: 'brought_forward' } })}
           />

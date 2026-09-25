@@ -25,6 +25,8 @@ export default function Cash() {
   const [date, setDate] = useState(todayDmy());
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  // Section F only: + cash left with the supervisor, − money he spent from his own pocket.
+  const [bfSign, setBfSign] = useState<1 | -1>(1);
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -74,8 +76,15 @@ export default function Cash() {
     if (monthIdOfIsoDate(iso) !== month) return setError(`That date is not in ${monthLabel(month)}. Switch month with the arrows above, or change the date.`);
     if (!description.trim())
       return setError(kind === 'brought_forward' ? 'Enter a description, for example “Balance from August 2026”.' : 'Enter a description, for example “Petty cash float”.');
-    if (baisa === null || baisa <= 0) return setError('Enter the amount in OMR, for example 200.000.');
-    await add(kind, iso, description.trim(), baisa, remarks.trim());
+    if (baisa === null || baisa === 0) return setError('Enter the amount in OMR, for example 200.000.');
+    let value = baisa;
+    if (kind === 'received') {
+      if (baisa < 0) return setError('Cash received from the cashier cannot be negative.');
+    } else {
+      // A typed minus sign wins; otherwise use the + / − choice.
+      value = baisa < 0 ? baisa : bfSign * baisa;
+    }
+    await add(kind, iso, description.trim(), value, remarks.trim());
     setDescription('');
     setAmount('');
     setRemarks('');
@@ -84,7 +93,13 @@ export default function Cash() {
   async function onCarryForward() {
     if (!suggestion) return;
     setError(null);
-    await add('brought_forward', `${month}-01`, `Balance from ${monthLabel(suggestion.fromMonth)}`, suggestion.amount, 'Cash left with supervisor');
+    await add(
+      'brought_forward',
+      `${month}-01`,
+      `Balance from ${monthLabel(suggestion.fromMonth)}`,
+      suggestion.amount,
+      suggestion.amount < 0 ? 'Spent from own pocket' : 'Cash left with supervisor',
+    );
   }
 
   function onDelete(e: CashEntry) {
@@ -111,8 +126,9 @@ export default function Cash() {
         {suggestion ? (
           <Card style={{ borderColor: c.highlight, backgroundColor: c.successSoft }}>
             <Text style={{ color: c.text, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20 }}>
-              You had {formatOmr(suggestion.amount, { thousands: true })} OMR left at the end of {monthLabel(suggestion.fromMonth)}. Bring it
-              forward into {monthLabel(month)}?
+              {suggestion.amount > 0
+                ? `You had ${formatOmr(suggestion.amount, { thousands: true })} OMR left at the end of ${monthLabel(suggestion.fromMonth)}. Bring it forward into ${monthLabel(month)}?`
+                : `At the end of ${monthLabel(suggestion.fromMonth)} you had spent ${formatOmr(-suggestion.amount, { thousands: true })} OMR from your own pocket (balance due not yet paid). Bring it forward into ${monthLabel(month)} as −${formatOmr(-suggestion.amount)}?`}
             </Text>
             <Button label={`Bring forward ${formatOmr(suggestion.amount)} OMR`} onPress={onCarryForward} busy={busy} />
           </Card>
@@ -162,7 +178,43 @@ export default function Cash() {
           onChangeText={setDescription}
           placeholder={kind === 'brought_forward' ? 'Balance from last month' : 'Petty cash float'}
         />
-        <Field label="Amount (OMR)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0.000" />
+        {kind === 'brought_forward' ? (
+          <View style={[styles.segment, { borderColor: c.border }]}>
+            {(
+              [
+                [1, '+ Cash left with me'],
+                [-1, '− Spent from my pocket'],
+              ] as const
+            ).map(([sgn, label]) => {
+              const on = bfSign === sgn;
+              return (
+                <Pressable
+                  key={sgn}
+                  onPress={() => setBfSign(sgn)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: on }}
+                  style={[styles.segmentItem, { backgroundColor: on ? (sgn < 0 ? c.warningSoft : c.successSoft) : 'transparent' }]}
+                >
+                  <Text style={{ color: on ? (sgn < 0 ? c.warning : c.success) : c.textMuted, fontFamily: fonts.semibold, fontSize: 13 }}>{label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        <Field
+          label={kind === 'brought_forward' && bfSign < 0 ? 'Amount spent from your pocket (OMR)' : 'Amount (OMR)'}
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType={kind === 'brought_forward' ? 'numbers-and-punctuation' : 'decimal-pad'}
+          placeholder="0.000"
+          hint={
+            kind === 'brought_forward'
+              ? bfSign < 0
+                ? 'Saved as a negative figure, e.g. −10.000. It increases the balance due from the cashier.'
+                : 'Cash still with you from last month. It reduces the balance due.'
+              : undefined
+          }
+        />
         <Field label="Remarks (optional)" value={remarks} onChangeText={setRemarks} placeholder={kind === 'brought_forward' ? 'Cash in hand' : 'Cashier'} />
         {error ? <Message tone="error" text={error} /> : null}
         {saved ? <Message tone="success" text={saved} /> : null}

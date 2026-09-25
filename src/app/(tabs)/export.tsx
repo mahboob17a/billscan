@@ -152,7 +152,7 @@ export default function Export() {
           <Line label="Total purchase value" value={s ? formatOmr(s.purchases, { thousands: true }) : '—'} strong />
           <Line
             label="F · Cash brought forward"
-            meta="From last month"
+            meta={s && s.broughtForward < 0 ? 'Spent from your pocket last month (negative)' : 'Cash left with you from last month'}
             value={s ? formatOmr(s.broughtForward, { thousands: true }) : '—'}
           />
           <Line label="G · Cash received" meta={`${s?.cashEntries ?? 0} ${s?.cashEntries === 1 ? 'entry' : 'entries'}`} value={s ? formatOmr(s.cashReceived, { thousands: true }) : '—'} />

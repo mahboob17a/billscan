@@ -73,6 +73,17 @@ describe('report workbook', () => {
     if (process.env.REPORT_OUT) fs.writeFileSync(process.env.REPORT_OUT, bytes);
   });
 
+  it('negative brought forward (spent from own pocket) raises the balance due', () => {
+    const neg = { ...SAMPLE, broughtForward: [{ entryDate: '2026-09-01', description: 'Balance from August 2026', amount: -10000, remarks: 'Spent from own pocket' }] };
+    const { bytes, totals } = buildReportXlsx(template, neg);
+    expect(totals.broughtForward).toBe(-10000);
+    expect(totals.balanceDue).toBe(25000); // 65.000 − (−10.000) − 50.000
+    const sheet = strFromU8(unzipSync(bytes)['xl/worksheets/sheet1.xml']);
+    expect(sheet).toContain('<v>-10.000</v>');
+    expect(sheet).toMatch(/<f>H\d+-H\d+-H\d+<\/f><v>25\.000<\/v>/);
+    if (process.env.REPORT_OUT_NEG) fs.writeFileSync(process.env.REPORT_OUT_NEG, bytes);
+  });
+
   it('empty month keeps every "No … recorded" line and zero totals', () => {
     const { bytes, totals } = buildReportXlsx(template, { ...SAMPLE, sections: { MATERIAL: [], SEWAGE: [], TOOLS: [], FUEL: [] }, cancelled: [], broughtForward: [], cash: [] });
     const sheet = strFromU8(unzipSync(bytes)['xl/worksheets/sheet1.xml']);
