@@ -15,25 +15,29 @@ Daryas Trading & Contracting LLC · UTAS Nizwa O&M contract.
 
 Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** in the Claude project.
 
-## Status: Phase 0 — Setup
+## Status
 
-- [x] Expo project, Expo Router, TypeScript, path alias `@/`
-- [x] Theme tokens (Slate `#1B2230`, Royal Violet `#6D4AFF`, Mint `#10B981`, Lavender Mist `#F4F2FB`), IBM Plex fonts
-- [x] App icon, Android adaptive icon, splash screen assets (`scripts/make_brand_assets.py`)
-- [x] Excel report template bundled (`assets/templates/DTR-PUR-UTAS-NIZWA-template.xlsx`)
-- [x] Money helpers in baisa with unit tests (`src/lib/money.ts`)
-- [x] Supabase schema: multi-user profiles (admin / supervisor) with row-level security, AI call log
-- [x] Edge Function `extract-bill`: ping health check + extraction with strict schema (prompt v0.1)
-- [x] EAS build profiles (development, preview APK, production)
-- [x] Phase 0 system-check screen (theme, fonts, template, maths, server link)
-- [ ] Your accounts and keys connected — see [`docs/SETUP-CHECKLIST.md`](docs/SETUP-CHECKLIST.md)
-- [ ] First APK installed on your phone
+**Phase 0 — Setup: done.** Supabase project, `extract-bill` function with the OpenAI key, admin account, APK built by GitHub Actions.
+
+**Phase 1 — Foundation: built (v0.2.0).**
+- [x] Splash held until fonts, database and saved sign-in are ready
+- [x] Login with email or employee ID + password (Supabase Auth); session kept in the phone's secure store
+- [x] Fingerprint / Face ID unlock (with phone PIN fallback) at start-up and after 5 minutes in the background
+- [x] Tabs: Month dashboard · Scan (Phase 2) · Cash received · Report (Phase 3) · Settings
+- [x] On-phone SQLite database: report months, bills, cash entries, description list, settings — all per user
+- [x] Cash received (Section F) add / delete, feeding the balance due
+- [x] Settings: name and designation, quick unlock, report header, system check, sign out
+
+Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout
 
 ```
 src/
-  app/            Screens (Expo Router). index.tsx = Phase 0 system check
+  app/            Screens (Expo Router): login, lock, (tabs)/…, report-settings, system-check
+  auth/           AuthProvider: session, profile, app lock
+  db/             SQLite schema, migrations and queries
+  state/          Selected report month
   components/     Shared UI (Logo)
   lib/            config, backend ping, money maths (+ __tests__)
   theme/          Colour, spacing, type tokens; fonts

@@ -1,4 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Asset } from 'expo-asset';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,9 +14,8 @@ import { fonts, palette, radius, spacing, ThemeColors, type, useThemeColors } fr
 type Status = 'pending' | 'ok' | 'fail';
 
 /**
- * Phase 0 system check. Proves the foundation works on a real phone:
- * brand theme, fonts, bundled Excel template, money maths and the server link.
- * Replaced by the login flow and month dashboard in Phase 1.
+ * System check (Settings → System check): brand theme, fonts, bundled Excel
+ * template, money maths and the server link.
  */
 export default function SystemCheck() {
   const c = useThemeColors();
@@ -45,12 +46,15 @@ export default function SystemCheck() {
         <Logo size={44} />
         <View style={{ flex: 1 }}>
           <Text style={s.brand}>BillScan</Text>
-          <Text style={s.sub}>Phase 0 · system check</Text>
+          <Text style={s.sub}>System check</Text>
         </View>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
+          <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
+        </Pressable>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={s.body}>
-        <Text style={s.intro}>This screen confirms the foundation works on your phone. It is replaced by login and the month dashboard in Phase 1.</Text>
+        <Text style={s.intro}>Use this if something is not working: it checks the app&apos;s storage, the Excel template, the money maths and the link to the BillScan server.</Text>
 
         <View style={s.card}>
           <Text style={s.cardTitle}>Colour palette</Text>
@@ -105,14 +109,14 @@ export default function SystemCheck() {
 function CheckRow({ c, label, status, detail }: { c: ThemeColors; label: string; status: Status; detail: string }) {
   const tone =
     status === 'ok'
-      ? { fg: c.success, bg: c.successSoft, mark: '✓' }
+      ? { fg: c.success, bg: c.successSoft, icon: 'check' as const }
       : status === 'fail'
-        ? { fg: c.danger, bg: c.dangerSoft, mark: '!' }
-        : { fg: c.textMuted, bg: c.primarySoft, mark: '…' };
+        ? { fg: c.danger, bg: c.dangerSoft, icon: 'exclamation' as const }
+        : { fg: c.textMuted, bg: c.primarySoft, icon: 'dots-horizontal' as const };
   return (
     <View style={[rowStyles.row, { backgroundColor: c.surface, borderColor: c.border }]}>
       <View style={[rowStyles.badge, { backgroundColor: tone.bg }]}>
-        <Text style={{ color: tone.fg, fontFamily: fonts.bold, fontSize: 14 }}>{tone.mark}</Text>
+        <MaterialCommunityIcons name={tone.icon} size={18} color={tone.fg} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ color: c.text, fontFamily: fonts.semibold, fontSize: 15 }}>{label}</Text>
