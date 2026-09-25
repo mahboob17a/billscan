@@ -37,7 +37,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -48,7 +48,12 @@ jobs:
         run: npm ci
 
       - name: Unit tests
-        run: npx jest --ci
+        run: |
+          set -o pipefail
+          npx jest --ci 2>&1 | tee jest-output.txt || {
+            echo "::error title=Unit tests failed::$(tail -c 2500 jest-output.txt | tr '\n' ' ' | tr -s ' ')"
+            exit 1
+          }
 
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
