@@ -23,7 +23,6 @@ env:
   # Public values (safe inside the app). The OpenAI key is NOT here; it lives in Supabase secrets.
   EXPO_PUBLIC_SUPABASE_URL: https://zjcgjhxvlzheqtpkyfxi.supabase.co
   EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_GnmB17DIgjYIj5cPFejmXw_uwzqYgYM
-  NODE_ENV: production
 
 jobs:
   build:
