@@ -39,3 +39,11 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## BillScan project notes
+
+- Spec: "BillScan Blueprint" v0.8 and "BillScan Roadmap" (Claude project docs). Follow them for fields, rules and screens.
+- Money is always integer baisa (`src/lib/money.ts`); never store OMR as floats. Report row rule: Shop Rate + VAT − Disc. = Grand Total.
+- The OpenAI key lives only in Supabase secrets; the app talks to the `extract-bill` Edge Function.
+- App palette: `src/theme/tokens.ts`. The exported Excel keeps the template's own navy/sand styling.
+- In this environment `npx expo install` needs `EXPO_OFFLINE=1` (api.expo.dev is blocked); `.npmrc` uses legacy-peer-deps.

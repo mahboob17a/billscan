@@ -1,0 +1,8 @@
+# Minimal Supabase CLI config for BillScan. `supabase init` would generate a fuller
+# file; only the settings BillScan depends on are listed here.
+project_id = "billscan"
+
+[functions.extract-bill]
+# Auth is checked inside the function (user access token), so the gateway check is off.
+# This also lets the ping health check work with the new publishable keys.
+verify_jwt = false
