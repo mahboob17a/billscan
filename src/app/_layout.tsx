@@ -41,7 +41,7 @@ export default function RootLayout() {
 }
 
 function RootStack() {
-  const { initializing, session, locked } = useAuth();
+  const { initializing, session, locked, welcomePending } = useAuth();
   // Bills scanned offline are read by the AI when the phone is back online.
   useAiQueue(session && !locked ? session.user.id : undefined);
   useEffect(() => {
@@ -63,7 +63,11 @@ function RootStack() {
       <Stack.Protected guard={signedIn && locked}>
         <Stack.Screen name="lock" />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && !locked}>
+      {/* Welcome comes first after sign-in / app start; "Go to Month screen" clears the guard. */}
+      <Stack.Protected guard={signedIn && !locked && welcomePending}>
+        <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn && !locked && !welcomePending}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="system-check" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="report-settings" options={{ animation: 'slide_from_right' }} />

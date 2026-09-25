@@ -23,6 +23,9 @@ interface AuthState {
   unlock: () => Promise<boolean>;
   setBiometric: (on: boolean) => Promise<string | null>;
   refreshProfile: () => Promise<void>;
+  /** Show the welcome screen (after sign-in and on each fresh app start). */
+  welcomePending: boolean;
+  dismissWelcome: () => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -51,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [locked, setLocked] = useState(false);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
+  const [welcomePending, setWelcomePending] = useState(false);
   const backgroundedAt = useRef<number | null>(null);
 
   const applySession = useCallback(async (s: Session | null) => {
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBiometricEnabledState(bio);
       await applySession(data.session);
       setLocked(Boolean(data.session) && bio);
+      setWelcomePending(Boolean(data.session));
       setInitializing(false);
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
@@ -121,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await applySession(data.session);
       if (!(await supabase.auth.getSession()).data.session) return 'This account is not active. Ask your admin.';
       setLocked(false);
+      setWelcomePending(true);
       return null;
     },
     [applySession],
@@ -157,9 +163,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session) setProfile(await loadProfile(session.user.id));
   }, [session]);
 
+  const dismissWelcome = useCallback(() => setWelcomePending(false), []);
+
   const value = useMemo<AuthState>(
-    () => ({ initializing, session, profile, locked, biometricEnabled, signIn, signOut, unlock, setBiometric, refreshProfile }),
-    [initializing, session, profile, locked, biometricEnabled, signIn, signOut, unlock, setBiometric, refreshProfile],
+    () => ({
+      initializing,
+      session,
+      profile,
+      locked,
+      biometricEnabled,
+      signIn,
+      signOut,
+      unlock,
+      setBiometric,
+      refreshProfile,
+      welcomePending,
+      dismissWelcome,
+    }),
+    [initializing, session, profile, locked, biometricEnabled, signIn, signOut, unlock, setBiometric, refreshProfile, welcomePending, dismissWelcome],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
