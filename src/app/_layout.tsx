@@ -2,17 +2,18 @@ import { useFonts } from 'expo-font';
 import { ErrorBoundaryProps, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
+import { BrandSplash } from '@/components/BrandSplash';
 import { getDb } from '@/db';
 import { useAiQueue } from '@/lib/aiQueue';
 import { flushErrors, installGlobalErrorHandler, recordError } from '@/lib/errorLog';
 import { useThemeColors } from '@/theme';
 import { fontAssets } from '@/theme/fonts';
 
-// Keep the native splash (slate + BillScan mark) until fonts, the database
-// and the saved sign-in have all been checked.
+// Native splash (OpsNest logo on navy) stays until fonts load; then the animated
+// OpsNest splash takes over until the database and saved sign-in have been checked.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ duration: 300, fade: true });
 installGlobalErrorHandler();
@@ -28,19 +29,30 @@ export default function RootLayout() {
       .catch((e) => setDbError(e instanceof Error ? e.message : String(e)));
   }, []);
 
-  if (!(fontsLoaded || fontError) || !(dbReady || dbError)) return null;
+  const [authReady, setAuthReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+  const onAuthReady = useCallback(() => setAuthReady(true), []);
+  const onSplashDone = useCallback(() => setSplashDone(true), []);
 
-  if (dbError) return <StartupError message={dbError} />;
+  if (!(fontsLoaded || fontError)) return null;
 
+  const appReady = Boolean(dbError) || (dbReady && authReady);
   return (
-    <AuthProvider>
+    <View style={{ flex: 1, backgroundColor: '#0B1B34' }}>
       <StatusBar style="light" />
-      <RootStack />
-    </AuthProvider>
+      {dbError ? (
+        <StartupError message={dbError} />
+      ) : dbReady ? (
+        <AuthProvider>
+          <RootStack onReady={onAuthReady} />
+        </AuthProvider>
+      ) : null}
+      {splashDone ? null : <BrandSplash ready={appReady} onDone={onSplashDone} />}
+    </View>
   );
 }
 
-function RootStack() {
+function RootStack({ onReady }: { onReady: () => void }) {
   const { initializing, session, locked, welcomePending } = useAuth();
   // Bills scanned offline are read by the AI when the phone is back online.
   useAiQueue(session && !locked ? session.user.id : undefined);
@@ -49,8 +61,8 @@ function RootStack() {
   }, [session]);
 
   useEffect(() => {
-    if (!initializing) SplashScreen.hideAsync().catch(() => {});
-  }, [initializing]);
+    if (!initializing) onReady();
+  }, [initializing, onReady]);
 
   if (initializing) return null;
 

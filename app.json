@@ -3,7 +3,7 @@
     "name": "BillScan",
     "slug": "billscan",
     "scheme": "billscan",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.daryas.billscan",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "backgroundColor": "#1B2230",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -39,9 +39,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1B2230",
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 160
+          "backgroundColor": "#0B1B34",
+          "image": "./assets/splash-opsnest.png",
+          "imageWidth": 200
         }
       ],
       "expo-sqlite",
