@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button, Field, Message, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { DEFAULT_REPORT_SETTINGS, getReportSettings, ReportSettings, saveReportSettings } from '@/db/repo';
@@ -45,7 +46,7 @@ export default function ReportSettingsScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader
         eyebrow={setup ? 'Set up · last step' : 'Settings'}
         title={setup ? 'Your report header' : 'Report header'}
@@ -79,7 +80,7 @@ export default function ReportSettingsScreen() {
         </View>
         <Text style={{ color: c.textMuted, fontSize: 12 }}>Months already started keep their reference. Changes apply to new months.</Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

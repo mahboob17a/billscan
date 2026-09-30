@@ -2,19 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
@@ -206,7 +195,7 @@ export default function BillReview() {
   const warns = flags.filter((f) => f.level === 'warn').length;
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader
         eyebrow={`${status === 'saved' ? 'Saved' : status === 'cancelled' ? 'Cancelled' : 'Draft'} · ${monthLabel(month)}`}
         title={draft.billNo ? `Bill ${draft.billNo}` : 'Check bill'}
@@ -397,7 +386,7 @@ export default function BillReview() {
           <Text style={{ color: '#fff', textAlign: 'center', padding: spacing.md, fontFamily: fonts.regular }}>Tap to close</Text>
         </SafeAreaView>
       </Modal>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

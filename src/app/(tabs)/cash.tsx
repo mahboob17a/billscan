@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useAuth } from '@/auth/AuthProvider';
 import { MonthSwitcher } from '@/components/MonthSwitcher';
 import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
@@ -120,7 +121,7 @@ export default function Cash() {
   const received = entries.filter((e) => e.kind === 'received');
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader eyebrow={`Sections F and G · ${monthLabel(month)}`} title="Cash" right={<MonthSwitcher />} />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {suggestion ? (
@@ -220,7 +221,7 @@ export default function Cash() {
         {saved ? <Message tone="success" text={saved} /> : null}
         <Button label="Add entry" onPress={onAdd} busy={busy} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useAuth } from '@/auth/AuthProvider';
 import { MonthSwitcher } from '@/components/MonthSwitcher';
 import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
@@ -104,7 +105,7 @@ export default function Export() {
   const billCount = s ? s.sections.reduce((a, x) => a + x.bills, 0) : 0;
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader eyebrow={s?.statementRef ?? ' '} title="Month-end report" right={<MonthSwitcher />} />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {rm?.exportedAt ? (
@@ -201,7 +202,7 @@ export default function Export() {
             : 'The file uses your DTR template: sections A–H, sub-totals and the reconciliation are Excel formulas, so totals stay correct if head office edits a cell.'}
         </Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

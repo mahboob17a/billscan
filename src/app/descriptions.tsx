@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button, Card, Field, Message, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { addDescription, DescriptionRow, listAllDescriptions, setDescriptionActive, updateDescription } from '@/db/repo';
@@ -59,7 +60,7 @@ export default function Descriptions() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader
         eyebrow="Settings"
         title="Description list"
@@ -134,7 +135,7 @@ export default function Descriptions() {
           <Button label="Add" onPress={onAdd} disabled={newLabel.trim().length < 2} />
         </Card>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

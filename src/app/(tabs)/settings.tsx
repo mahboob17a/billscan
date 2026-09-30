@@ -3,6 +3,7 @@ import * as Application from 'expo-application';
 import { router } from 'expo-router';
 import { ComponentProps, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
 import { updateOwnProfile } from '@/lib/supabase';
@@ -43,7 +44,7 @@ export default function Settings() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.background }}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScreenHeader eyebrow={session?.user.email ?? ''} title="Settings" />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {msg ? <Message tone={msg.tone} text={msg.text} /> : null}
@@ -120,7 +121,7 @@ export default function Settings() {
           BillScan {Application.nativeApplicationVersion ?? ''} ({Application.nativeBuildVersion ?? 'dev'})
         </Text>
       </ScrollView>
-    </View>
+    </KeyboardSafeView>
   );
 }
 

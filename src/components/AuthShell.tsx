@@ -2,7 +2,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Logo } from '@/components/Logo';
 import type { OAuthProvider } from '@/lib/authFlows';
@@ -11,7 +12,7 @@ import { fonts, radius, spacing, useThemeColors } from '@/theme';
 export function AuthShell({ title, subtitle, back, children }: { title: string; subtitle?: string; back?: boolean; children: ReactNode }) {
   const c = useThemeColors();
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardSafeView style={{ flex: 1, backgroundColor: c.background }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <SafeAreaView edges={['top']} style={[styles.top, { backgroundColor: c.bar }]}>
           {back ? (
@@ -39,7 +40,7 @@ export function AuthShell({ title, subtitle, back, children }: { title: string; 
           {children}
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 
