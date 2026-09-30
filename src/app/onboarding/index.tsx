@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ComponentProps, useRef, useState } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GhostButton, GradientButton, ON, OnbScreen, ScanBillIcon } from '@/components/onboarding';
+import { useOnboarding } from '@/state/onboarding';
 import { fonts, spacing } from '@/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -19,6 +20,7 @@ export default function Intro() {
   const ref = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
   const last = page === PAGES.length - 1;
+  const registering = useOnboarding((s) => s.registering);
 
   function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     setPage(Math.round(e.nativeEvent.contentOffset.x / width));
@@ -38,7 +40,12 @@ export default function Intro() {
             ))}
           </View>
           <GradientButton label={last ? 'Get started' : 'Next'} icon="arrow-right" onPress={next} />
-          {!last ? <GhostButton label="Skip" onPress={() => router.push('/onboarding/consent')} /> : <View style={{ height: 38 }} />}
+          {!last ? <GhostButton label="Skip" onPress={() => router.push('/onboarding/consent')} /> : null}
+          {registering ? (
+            <GhostButton label="I already have an account — sign in" onPress={() => useOnboarding.getState().cancelRegistration()} />
+          ) : last ? (
+            <View style={{ height: 38 }} />
+          ) : null}
         </>
       }
     >

@@ -26,9 +26,37 @@ interface OnboardingState {
   accept: () => Promise<void>;
   finishPermissions: () => Promise<void>;
   finishReportSetup: () => Promise<void>;
+  /**
+   * "Create an account": a new user goes through intro → consent → permissions → sign-up
+   * form, even on a phone where someone already accepted before.
+   */
+  registering: boolean;
+  /** This phone's onboarding was just completed in this app session (no need to repeat it). */
+  onboardedNow: boolean;
+  startRegistration: () => Promise<void>;
+  cancelRegistration: () => Promise<void>;
+  endRegistration: () => void;
 }
 
-export const useOnboarding = create<OnboardingState>((set) => ({
+// What was stored before "Create an account" reset it, so "Back to sign in" can restore it.
+let saved: { consent: ConsentRecord | null; permissionsSeen: boolean; reportSetupDone: boolean } | null = null;
+
+async function writeFlags(consent: ConsentRecord | null, permissionsSeen: boolean, reportSetupDone: boolean) {
+  try {
+    if (consent) await SecureStore.setItemAsync(CONSENT_KEY, JSON.stringify(consent));
+    else await SecureStore.deleteItemAsync(CONSENT_KEY);
+    if (permissionsSeen) await SecureStore.setItemAsync(PERMISSIONS_KEY, '1');
+    else await SecureStore.deleteItemAsync(PERMISSIONS_KEY);
+    if (reportSetupDone) await SecureStore.setItemAsync(REPORT_SETUP_KEY, '1');
+    else await SecureStore.deleteItemAsync(REPORT_SETUP_KEY);
+  } catch {
+    // Storage errors only mean onboarding may be shown again.
+  }
+}
+
+export const useOnboarding = create<OnboardingState>((set, get) => ({
+  registering: false,
+  onboardedNow: false,
   loaded: false,
   consent: null,
   permissionsSeen: false,
@@ -54,11 +82,28 @@ export const useOnboarding = create<OnboardingState>((set) => ({
   },
   finishPermissions: async () => {
     await SecureStore.setItemAsync(PERMISSIONS_KEY, '1');
-    set({ permissionsSeen: true });
+    set({ permissionsSeen: true, onboardedNow: true });
   },
   finishReportSetup: async () => {
     set({ reportSetupDone: true });
     await SecureStore.setItemAsync(REPORT_SETUP_KEY, '1').catch(() => {});
+  },
+  startRegistration: async () => {
+    const { consent, permissionsSeen, reportSetupDone } = get();
+    saved = { consent, permissionsSeen, reportSetupDone };
+    // The new user also sets up their own report header after the first sign-in.
+    set({ registering: true, consent: null, permissionsSeen: false, reportSetupDone: false });
+    await writeFlags(null, false, false);
+  },
+  cancelRegistration: async () => {
+    const back = saved ?? { consent: null, permissionsSeen: false, reportSetupDone: false };
+    saved = null;
+    set({ registering: false, ...back });
+    await writeFlags(back.consent, back.permissionsSeen, back.reportSetupDone);
+  },
+  endRegistration: () => {
+    saved = null;
+    set({ registering: false });
   },
 }));
 

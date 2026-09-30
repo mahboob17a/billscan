@@ -6,6 +6,7 @@ import { offerBiometric } from '@/auth/offerBiometric';
 import { AuthShell, OrDivider, ProviderButton, TextLink } from '@/components/AuthShell';
 import { Button, Field, Message } from '@/components/ui';
 import { AuthOptions, fetchAuthOptions, OAuthProvider, signInWithProvider } from '@/lib/authFlows';
+import { useOnboarding } from '@/state/onboarding';
 import { fonts, spacing, useThemeColors } from '@/theme';
 
 export default function Login() {
@@ -43,6 +44,13 @@ export default function Login() {
     if (err === 'cancelled') return;
     if (err) return setError(err);
     await offerBiometric(setBiometric);
+  }
+
+  // A new user first sees the intro, accepts the documents and grants permissions, then
+  // fills in the sign-up form — unless that was just done on this phone a moment ago.
+  function onCreateAccount() {
+    if (useOnboarding.getState().onboardedNow) router.push('/signup');
+    else useOnboarding.getState().startRegistration();
   }
 
   const social = options.google || options.apple;
@@ -95,7 +103,7 @@ export default function Login() {
       {options.signUp ? (
         <View style={styles.signup}>
           <Text style={{ color: c.textMuted, fontFamily: fonts.regular, fontSize: 14 }}>New to BillScan?</Text>
-          <TextLink label="Create an account" onPress={() => router.push('/signup')} />
+          <TextLink label="Create an account" onPress={onCreateAccount} />
         </View>
       ) : null}
     </AuthShell>

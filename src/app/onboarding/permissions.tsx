@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, ScrollView, StyleSheet, Text } from 'react-native';
 import { GradientButton, ON, OnbScreen, PermissionRow, StepHeader } from '@/components/onboarding';
@@ -34,8 +34,14 @@ export default function Permissions() {
     // Ask for anything not asked yet, so nothing interrupts the first scan later.
     if (camera === 'undetermined') setCamera(await requestCamera());
     if (photos === 'undetermined') setPhotos(await requestPhotos());
+    const registering = useOnboarding.getState().registering;
     await finish();
     setBusy(false);
+    if (registering) {
+      // New user: continue to the sign-up form once the navigator has left onboarding.
+      useOnboarding.getState().endRegistration();
+      setTimeout(() => router.replace('/signup'), 0);
+    }
   }
 
   return (
