@@ -112,6 +112,7 @@ export default function Settings() {
         <Card style={{ gap: 0, paddingVertical: 4 }}>
           <LinkRow icon="cloud-sync-outline" label="Backup and restore" detail="All months, bills and photos in one file" onPress={() => router.push('/backup')} first />
           <LinkRow icon="stethoscope" label="System check" detail="Server, AI connection and AI usage" onPress={() => router.push('/system-check')} />
+          <LinkRow icon="shield-check-outline" label="Legal and permissions" detail="User guide, privacy policy, disclaimer, camera and photos" onPress={() => router.push('/legal')} />
         </Card>
 
         <Button label="Sign out" kind="danger" onPress={confirmSignOut} style={{ marginTop: spacing.sm }} />

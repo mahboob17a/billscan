@@ -6,6 +6,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { BrandSplash } from '@/components/BrandSplash';
+import { LEGAL_VERSION } from '@/legal/documents';
+import { syncConsent } from '@/lib/consent';
+import { needsOnboarding, useOnboarding } from '@/state/onboarding';
 import { getDb } from '@/db';
 import { useAiQueue } from '@/lib/aiQueue';
 import { flushErrors, installGlobalErrorHandler, recordError } from '@/lib/errorLog';
@@ -23,6 +26,11 @@ export default function RootLayout() {
   const [dbError, setDbError] = useState<string | null>(null);
   const [dbReady, setDbReady] = useState(false);
 
+  const onboardingLoaded = useOnboarding((s) => s.loaded);
+  useEffect(() => {
+    useOnboarding.getState().load();
+  }, []);
+
   useEffect(() => {
     getDb()
       .then(() => setDbReady(true))
@@ -36,13 +44,13 @@ export default function RootLayout() {
 
   if (!(fontsLoaded || fontError)) return null;
 
-  const appReady = Boolean(dbError) || (dbReady && authReady);
+  const appReady = Boolean(dbError) || (dbReady && authReady && onboardingLoaded);
   return (
     <View style={{ flex: 1, backgroundColor: '#0B1B34' }}>
       <StatusBar style="light" />
       {dbError ? (
         <StartupError message={dbError} />
-      ) : dbReady ? (
+      ) : dbReady && onboardingLoaded ? (
         <AuthProvider>
           <RootStack onReady={onAuthReady} />
         </AuthProvider>
@@ -56,9 +64,15 @@ function RootStack({ onReady }: { onReady: () => void }) {
   const { initializing, session, locked, welcomePending } = useAuth();
   // Bills scanned offline are read by the AI when the phone is back online.
   useAiQueue(session && !locked ? session.user.id : undefined);
+  const consent = useOnboarding((s) => s.consent);
+  const onboarding = useOnboarding((s) => needsOnboarding(s));
   useEffect(() => {
     if (session) flushErrors();
   }, [session]);
+  // Keep a server-side record of which documents this user accepted.
+  useEffect(() => {
+    if (session) syncConsent(session.user.id, consent);
+  }, [session, consent]);
 
   useEffect(() => {
     if (!initializing) onReady();
@@ -69,22 +83,37 @@ function RootStack({ onReady }: { onReady: () => void }) {
   const signedIn = Boolean(session);
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      <Stack.Protected guard={!signedIn}>
+      {/* First run (and whenever the legal documents change): intro, consent, permissions. */}
+      <Stack.Protected guard={onboarding}>
+        {consent?.version === LEGAL_VERSION ? (
+          <Stack.Screen name="onboarding/permissions" />
+        ) : (
+          <>
+            <Stack.Screen name="onboarding/index" />
+            <Stack.Screen name="onboarding/consent" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="onboarding/permissions" options={{ animation: 'slide_from_right' }} />
+          </>
+        )}
+      </Stack.Protected>
+      <Stack.Protected guard={!onboarding && !signedIn}>
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="forgot-password" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
+      {/* Readable any time: during onboarding and from Settings. */}
+      <Stack.Screen name="legal/[doc]" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="legal/index" options={{ animation: 'slide_from_right' }} />
       {/* Deep-link landings (email links, Google/Apple return); open signed in or out. */}
       <Stack.Screen name="auth-callback" />
       <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right' }} />
-      <Stack.Protected guard={signedIn && locked}>
+      <Stack.Protected guard={!onboarding && signedIn && locked}>
         <Stack.Screen name="lock" />
       </Stack.Protected>
       {/* Welcome comes first after sign-in / app start; "Go to Month screen" clears the guard. */}
-      <Stack.Protected guard={signedIn && !locked && welcomePending}>
+      <Stack.Protected guard={!onboarding && signedIn && !locked && welcomePending}>
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && !locked && !welcomePending}>
+      <Stack.Protected guard={!onboarding && signedIn && !locked && !welcomePending}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="system-check" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="report-settings" options={{ animation: 'slide_from_right' }} />
