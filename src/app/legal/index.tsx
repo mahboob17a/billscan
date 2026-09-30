@@ -2,6 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BrandIcon } from '@/components/BrandIcon';
+import type { BrandIconName } from '@/components/brandIconShapes';
 import { Card, ScreenHeader } from '@/components/ui';
 import { LEGAL_DOCS, LEGAL_ORDER } from '@/legal/documents';
 import { isoToDmy } from '@/lib/billForm';
@@ -38,9 +40,12 @@ export default function LegalAndPermissions() {
     return () => sub.remove();
   }, [refresh]);
 
-  const permRow = (icon: 'camera-outline' | 'image-multiple-outline', title: string, state: PermState, ask: () => Promise<PermState>, set: (s: PermState) => void, first?: boolean) => (
+  const permRow = (icon: BrandIconName, title: string, state: PermState, ask: () => Promise<PermState>, set: (s: PermState) => void, first?: boolean) => (
     <View style={[styles.row, { borderTopColor: c.border, borderTopWidth: first ? 0 : StyleSheet.hairlineWidth }]}>
-      <MaterialCommunityIcons name={icon} size={22} color={c.primary} />
+      {/* Same two-tone icons as onboarding, on a navy tile so the white detail shows on light screens */}
+      <View style={styles.iconTile}>
+        <BrandIcon name={icon} size={26} />
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.t, { color: c.text }]}>{title}</Text>
         <Text style={{ color: state === 'granted' || state === 'not-needed' ? c.success : c.warning, fontFamily: fonts.regular, fontSize: 12 }}>{LABEL[state]}</Text>
@@ -90,8 +95,8 @@ export default function LegalAndPermissions() {
 
         <Text style={[styles.h2, { color: c.textMuted }]}>PERMISSIONS</Text>
         <Card style={{ gap: 0, paddingVertical: 4 }}>
-          {permRow('camera-outline', 'Camera — scan bills', camera, requestCamera, setCamera, true)}
-          {permRow('image-multiple-outline', 'Photos — add a bill photo', photos, requestPhotos, setPhotos)}
+          {permRow('scan', 'Camera — scan bills', camera, requestCamera, setCamera, true)}
+          {permRow('photos', 'Photos — add a bill photo', photos, requestPhotos, setPhotos)}
         </Card>
         <Pressable onPress={openAppSettings} accessibilityRole="button" hitSlop={8}>
           <Text style={{ color: c.primary, fontFamily: fonts.medium, fontSize: 14 }}>Open phone settings for BillScan</Text>
@@ -107,4 +112,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12 },
   t: { fontFamily: fonts.medium, fontSize: 15 },
   note: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  iconTile: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#0D2443', alignItems: 'center', justifyContent: 'center' },
 });
