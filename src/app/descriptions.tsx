@@ -1,15 +1,16 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { Button, Card, Field, Message, ScreenHeader } from '@/components/ui';
+import { Button, Card, Field, Message, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { addDescription, DescriptionRow, listAllDescriptions, setDescriptionActive, updateDescription } from '@/db/repo';
 import { Section, SECTION_INFO, SECTIONS } from '@/db/schema';
 import { fonts, radius, spacing, useThemeColors } from '@/theme';
 
 /** Settings → Description list: the labels offered on the review screen and to the AI. */
 export default function Descriptions() {
+  const bottom = useBottomPad();
   const c = useThemeColors();
   const { session } = useAuth();
   const userId = session?.user.id ?? '';
@@ -63,12 +64,12 @@ export default function Descriptions() {
         eyebrow="Settings"
         title="Description list"
         right={
-          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
+          <Pressable onPress={() => goBack('/(tabs)/settings')} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
             <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: bottom }]} keyboardShouldPersistTaps="handled">
         <Text style={[styles.p, { color: c.textMuted }]}>
           These are the labels you tap on the check screen, and the only ones the AI may choose. Turn a label off to retire it; bills
           already saved keep their description.

@@ -1,15 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { Button, Field, Message, ScreenHeader } from '@/components/ui';
+import { Button, Field, Message, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { DEFAULT_REPORT_SETTINGS, getReportSettings, ReportSettings, saveReportSettings } from '@/db/repo';
 import { monthIdOf, statementRef } from '@/lib/months';
 import { spacing, useThemeColors } from '@/theme';
 
 /** Header fields printed at the top of the monthly purchase report. */
 export default function ReportSettingsScreen() {
+  const bottom = useBottomPad();
   const c = useThemeColors();
   const { session } = useAuth();
   const userId = session?.user.id ?? '';
@@ -39,12 +39,12 @@ export default function ReportSettingsScreen() {
         eyebrow="Settings"
         title="Report header"
         right={
-          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
+          <Pressable onPress={() => goBack('/(tabs)/export')} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
             <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: bottom }]} keyboardShouldPersistTaps="handled">
         <Field label="Company (row 1)" value={s.companyName} onChangeText={set('companyName')} />
         <Field label="Contract line (row 2)" value={s.contractLine} onChangeText={set('contractLine')} />
         <Field label="Prepared by" value={s.preparedBy} onChangeText={set('preparedBy')} placeholder="Mahboob — Maintenance Supervisor" />

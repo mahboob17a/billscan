@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { MonthSwitcher } from '@/components/MonthSwitcher';
-import { ScreenHeader } from '@/components/ui';
+import { ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { BillListFilter, BillRecord, listBills } from '@/db/bills';
 import { Section, SECTION_INFO, SECTIONS } from '@/db/schema';
 import { checkDraft, hasErrors } from '@/lib/billRules';
@@ -16,6 +16,7 @@ import { fonts, radius, spacing, useThemeColors } from '@/theme';
 
 /** Bills of one section (A, C, D, E), cancelled bills (B), or drafts waiting for review. */
 export default function BillList() {
+  const bottom = useBottomPad();
   const c = useThemeColors();
   const { session } = useAuth();
   const userId = session?.user.id ?? '';
@@ -63,7 +64,7 @@ export default function BillList() {
         right={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <MonthSwitcher />
-            <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
+            <Pressable onPress={() => goBack('/(tabs)')} accessibilityRole="button" accessibilityLabel="Back" hitSlop={10}>
               <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
             </Pressable>
           </View>
@@ -72,7 +73,7 @@ export default function BillList() {
       <FlatList
         data={bills}
         keyExtractor={(b) => b.id}
-        contentContainerStyle={styles.body}
+        contentContainerStyle={[styles.body, { paddingBottom: bottom }]}
         ListEmptyComponent={
           <Text style={[styles.empty, { color: c.textMuted }]}>
             {filter.kind === 'drafts' ? 'No drafts. Every scanned bill has been checked.' : `No bills here for ${monthLabel(month)}.`}

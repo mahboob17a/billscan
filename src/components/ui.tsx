@@ -9,8 +9,23 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, type Href } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts, radius, spacing, useThemeColors } from '@/theme';
+
+/**
+ * Bottom padding for scrolling screens so the last lines are never hidden behind the
+ * phone's navigation buttons / gesture bar (Android draws the app edge to edge).
+ */
+export function useBottomPad(extra: number = spacing.xxl): number {
+  return useSafeAreaInsets().bottom + extra;
+}
+
+/** Go back one screen; if there is nothing to go back to, open `fallback` instead. */
+export function goBack(fallback: Href) {
+  if (router.canGoBack()) router.back();
+  else router.replace(fallback);
+}
 
 /** Slate header bar used at the top of every main screen. */
 export function ScreenHeader({ eyebrow, title, right }: { eyebrow?: string; title: string; right?: ReactNode }) {

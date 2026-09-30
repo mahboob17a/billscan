@@ -1,9 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
-import { Button, Card, Message, ScreenHeader } from '@/components/ui';
+import { Button, Card, Message, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { createBackup, pickBackup, restoreBackup, shareBackup } from '@/backup/backup';
 import { isoToDmy } from '@/lib/billForm';
 import { logError } from '@/lib/errorLog';
@@ -12,6 +11,7 @@ import { fonts, spacing, useThemeColors } from '@/theme';
 
 /** Settings → Backup: all months, bills, cash entries and photos in one file. */
 export default function Backup() {
+  const bottom = useBottomPad();
   const c = useThemeColors();
   const { session } = useAuth();
   const userId = session?.user.id ?? '';
@@ -84,12 +84,12 @@ export default function Backup() {
         eyebrow="Settings"
         title="Backup and restore"
         right={
-          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
+          <Pressable onPress={() => goBack('/(tabs)/settings')} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
             <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: bottom }]}>
         <Card>
           <Text style={[styles.h2, { color: c.text }]}>Back up everything</Text>
           <Text style={[styles.p, { color: c.textMuted }]}>

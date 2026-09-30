@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BrandIcon } from '@/components/BrandIcon';
 import type { BrandIconName } from '@/components/brandIconShapes';
-import { Card, ScreenHeader } from '@/components/ui';
+import { Card, ScreenHeader, goBack, useBottomPad } from '@/components/ui';
 import { LEGAL_DOCS, LEGAL_ORDER } from '@/legal/documents';
 import { isoToDmy } from '@/lib/billForm';
 import { cameraState, openAppSettings, PermState, photosState, requestCamera, requestPhotos } from '@/lib/permissions';
@@ -21,6 +21,7 @@ const LABEL: Record<PermState, string> = {
 
 /** Settings → Legal and permissions. */
 export default function LegalAndPermissions() {
+  const bottom = useBottomPad();
   const c = useThemeColors();
   const consent = useOnboarding((s) => s.consent);
   const [camera, setCamera] = useState<PermState>('undetermined');
@@ -64,12 +65,12 @@ export default function LegalAndPermissions() {
         eyebrow="Settings"
         title="Legal and permissions"
         right={
-          <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
+          <Pressable onPress={() => goBack('/(tabs)/settings')} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}>
             <MaterialCommunityIcons name="close" size={24} color={c.onBar} />
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView contentContainerStyle={[styles.body, { paddingBottom: bottom }]}>
         <Text style={[styles.h2, { color: c.textMuted }]}>DOCUMENTS</Text>
         <Card style={{ gap: 0, paddingVertical: 4 }}>
           {LEGAL_ORDER.map((id, i) => (
