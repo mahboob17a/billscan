@@ -76,6 +76,9 @@ export default function Settings() {
               >
                 <Text style={{ color: c.primary, fontFamily: fonts.medium, fontSize: 14 }}>Edit name and designation</Text>
               </Pressable>
+              <Pressable onPress={() => router.push('/reset-password')} accessibilityRole="button" hitSlop={8}>
+                <Text style={{ color: c.primary, fontFamily: fonts.medium, fontSize: 14 }}>Change password</Text>
+              </Pressable>
             </>
           )}
         </Card>

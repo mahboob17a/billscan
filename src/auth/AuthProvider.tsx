@@ -56,8 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [welcomePending, setWelcomePending] = useState(false);
   const backgroundedAt = useRef<number | null>(null);
+  const currentUserId = useRef<string | null>(null);
 
   const applySession = useCallback(async (s: Session | null) => {
+    currentUserId.current = s?.user.id ?? null;
     setSession(s);
     if (!s) {
       setProfile(null);
@@ -89,11 +91,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (event === 'SIGNED_OUT') {
+        currentUserId.current = null;
         setSession(null);
         setProfile(null);
         setLocked(false);
       } else if (event === 'TOKEN_REFRESHED' && s) {
         setSession(s);
+      } else if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && s && currentUserId.current !== s.user.id) {
+        // Google / Apple / email-link sign-in finished through a deep link.
+        currentUserId.current = s.user.id;
+        // Supabase callbacks must not await other Supabase calls; defer.
+        setTimeout(() => {
+          applySession(s).then(() => {
+            setLocked(false);
+            setWelcomePending(true);
+          });
+        }, 0);
       }
     });
     return () => {

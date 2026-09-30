@@ -71,7 +71,12 @@ function RootStack({ onReady }: { onReady: () => void }) {
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="forgot-password" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
+      {/* Deep-link landings (email links, Google/Apple return); open signed in or out. */}
+      <Stack.Screen name="auth-callback" />
+      <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right' }} />
       <Stack.Protected guard={signedIn && locked}>
         <Stack.Screen name="lock" />
       </Stack.Protected>

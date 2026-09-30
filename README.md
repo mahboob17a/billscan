@@ -54,6 +54,12 @@ Design and plan: see the **BillScan Blueprint** (v0.8) and **BillScan Roadmap** 
 
 **Report v2 (v0.6.0):** 8 sections as in the updated DTR template — A Material, B Cancelled, C Sewage, D Tools, E Fuel, F Cash Brought Forward from Last Month, G Cash Received from Cashier, H Reconciliation (Balance Due = Purchases − Brought Forward − Cash Received). The Cash tab offers last month's leftover cash as this month's F entry.
 
+**Accounts (v0.9.0).**
+- [x] Sign in with email / employee ID + password, or Continue with Google / Apple (buttons appear only when the provider is switched on in Supabase)
+- [x] Create account (name, email, password) with email confirmation link back into the app
+- [x] Forgot password (email link → new password in the app) and Change password in Settings
+- [x] Deep links: billscan://auth-callback and billscan://reset-password (PKCE)
+
 Install the latest test build on Android: https://github.com/mahboob17a/billscan/releases/latest/download/billscan.apk
 
 ## Project layout

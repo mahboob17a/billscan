@@ -11,6 +11,9 @@ export const supabase = createClient(config.supabaseUrl || 'https://invalid.loca
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE: sign-in links (Google, Apple, email confirmation, password reset) come back
+    // to the app as billscan://…?code=… and are exchanged for a session on this phone.
+    flowType: 'pkce',
   },
 });
 
@@ -69,7 +72,7 @@ export async function resolveLoginEmail(input: string): Promise<{ email?: string
 export function signInErrorMessage(message: string | undefined): string {
   const m = (message ?? '').toLowerCase();
   if (m.includes('invalid login')) return 'Email or password is not correct.';
-  if (m.includes('email not confirmed')) return 'This account is not confirmed yet. Ask your admin.';
+  if (m.includes('email not confirmed')) return 'Confirm your email first: open the link we sent you, then sign in.';
   if (m.includes('network') || m.includes('fetch')) return 'No connection. Check mobile data or Wi-Fi and try again.';
   return 'Could not sign in. Try again in a moment.';
 }
