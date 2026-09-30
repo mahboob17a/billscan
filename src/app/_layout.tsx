@@ -84,16 +84,13 @@ function RootStack({ onReady }: { onReady: () => void }) {
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
       {/* First run (and whenever the legal documents change): intro, consent, permissions. */}
+      {/* Only Screen / Protected children are allowed here — no fragments (expo-router crashes on them). */}
+      <Stack.Protected guard={onboarding && consent?.version !== LEGAL_VERSION}>
+        <Stack.Screen name="onboarding/index" />
+        <Stack.Screen name="onboarding/consent" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
       <Stack.Protected guard={onboarding}>
-        {consent?.version === LEGAL_VERSION ? (
-          <Stack.Screen name="onboarding/permissions" />
-        ) : (
-          <>
-            <Stack.Screen name="onboarding/index" />
-            <Stack.Screen name="onboarding/consent" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="onboarding/permissions" options={{ animation: 'slide_from_right' }} />
-          </>
-        )}
+        <Stack.Screen name="onboarding/permissions" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
       <Stack.Protected guard={!onboarding && !signedIn}>
         <Stack.Screen name="login" />
