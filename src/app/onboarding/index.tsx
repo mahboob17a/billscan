@@ -2,13 +2,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ComponentProps, useRef, useState } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { GhostButton, GradientButton, ON, OnbScreen } from '@/components/onboarding';
+import { GhostButton, GradientButton, ON, OnbScreen, ScanBillIcon } from '@/components/onboarding';
 import { fonts, spacing } from '@/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-const PAGES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'camera-document', title: 'Scan every bill', text: 'Photograph printed or handwritten bills — English or Arabic — the moment you buy.' },
+const PAGES: { icon: IconName | 'scan-bill'; title: string; text: string }[] = [
+  { icon: 'scan-bill', title: 'Scan every bill', text: 'Photograph printed or handwritten bills — English or Arabic — the moment you buy.' },
   { icon: 'shield-check-outline', title: 'AI reads, you confirm', text: 'Date, bill number, VAT, discount and total are filled in for you. Built-in checks catch anything that doesn’t add up.' },
   { icon: 'file-excel-outline', title: 'Report in one tap', text: 'Your monthly Excel report and a PDF of every bill, ready to send to head office.' },
 ];
@@ -46,7 +46,7 @@ export default function Intro() {
         {PAGES.map((p) => (
           <View key={p.title} style={[styles.page, { width }]}>
             <View style={styles.iconWrap}>
-              <MaterialCommunityIcons name={p.icon} size={56} color={ON.teal} />
+              {p.icon === 'scan-bill' ? <ScanBillIcon size={64} /> : <MaterialCommunityIcons name={p.icon} size={56} color={ON.teal} />}
             </View>
             <Text style={styles.title} accessibilityRole="header">
               {p.title}

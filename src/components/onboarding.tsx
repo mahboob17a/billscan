@@ -20,6 +20,25 @@ export const ON = {
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
+/**
+ * Scan icon: a bill inside scanner corner brackets with a teal→blue scan line —
+ * clearer and more on-brand than a plain camera glyph.
+ */
+export function ScanBillIcon({ size = 56 }: { size?: number }) {
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no">
+      <MaterialCommunityIcons name="scan-helper" size={size} color={ON.teal} style={{ position: 'absolute' }} />
+      <MaterialCommunityIcons name="receipt-text-outline" size={size * 0.52} color="#FFFFFF" />
+      <LinearGradient
+        colors={[ON.teal, ON.blue]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ position: 'absolute', left: size * 0.12, right: size * 0.12, top: size / 2 - Math.max(1, size * 0.02), height: Math.max(2, size * 0.04), borderRadius: 2, opacity: 0.9 }}
+      />
+    </View>
+  );
+}
+
 export function OnbScreen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
     <View style={{ flex: 1, backgroundColor: ON.navy }}>
@@ -110,7 +129,7 @@ export function PermissionRow({
   onAllow,
   note,
 }: {
-  icon: IconName;
+  icon: IconName | 'scan-bill';
   title: string;
   reason: string;
   state: PermState | 'auto' | 'later';
@@ -124,7 +143,7 @@ export function PermissionRow({
     <View style={styles.card}>
       <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' }}>
         <View style={styles.permIcon}>
-          <MaterialCommunityIcons name={icon} size={22} color={ON.teal} />
+          {icon === 'scan-bill' ? <ScanBillIcon size={26} /> : <MaterialCommunityIcons name={icon} size={22} color={ON.teal} />}
         </View>
         <View style={{ flex: 1, gap: 3 }}>
           <Text style={styles.cardTitle}>{title}</Text>

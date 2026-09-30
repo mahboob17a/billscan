@@ -42,7 +42,7 @@ export default function Permissions() {
     <OnbScreen footer={<GradientButton label="Continue" icon="arrow-right" onPress={onContinue} busy={busy} />}>
       <ScrollView contentContainerStyle={styles.body}>
         <StepHeader step={2} of={2} title="Allow access" subtitle="BillScan only uses these to scan and store your bills. Nothing is taken without you tapping a button." />
-        <PermissionRow icon="camera-outline" title="Camera" reason="To photograph and scan purchase bills." state={camera} onAllow={async () => setCamera(await requestCamera())} />
+        <PermissionRow icon="scan-bill" title="Camera" reason="To photograph and scan purchase bills." state={camera} onAllow={async () => setCamera(await requestCamera())} />
         <PermissionRow
           icon="image-multiple-outline"
           title="Photos"
