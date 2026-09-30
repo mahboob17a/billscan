@@ -61,10 +61,10 @@ export default function SystemCheck() {
           <Text style={s.cardTitle}>Colour palette</Text>
           <View style={s.swatches}>
             {[
-              ['Slate', palette.slate],
-              ['Violet', palette.violet],
-              ['Mint', palette.mint],
-              ['Lavender', palette.lavenderMist],
+              ['Navy', palette.navy],
+              ['Teal', palette.teal],
+              ['Blue', palette.blue],
+              ['Mist', palette.mist],
             ].map(([name, hex]) => (
               <View key={name} style={s.swatch}>
                 <View style={[s.chip, { backgroundColor: hex }]} />

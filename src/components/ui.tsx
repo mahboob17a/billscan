@@ -9,9 +9,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fonts, radius, spacing, useThemeColors } from '@/theme';
+import { brandGradient, fonts, radius, spacing, useThemeColors } from '@/theme';
 
 /**
  * Bottom padding for scrolling screens so the last lines are never hidden behind the
@@ -65,6 +66,14 @@ export function Button({
   const c = useThemeColors();
   const bg = kind === 'primary' ? c.primary : kind === 'danger' ? c.dangerSoft : c.surface;
   const fg = kind === 'primary' ? c.onPrimary : kind === 'danger' ? c.danger : c.text;
+  const inner = busy ? (
+    <ActivityIndicator color={fg} />
+  ) : (
+    <View style={styles.buttonInner}>
+      {icon}
+      <Text style={[styles.buttonText, { color: fg }]}>{label}</Text>
+    </View>
+  );
   return (
     <Pressable
       accessibilityRole="button"
@@ -74,21 +83,23 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        {
-          backgroundColor: pressed && kind === 'primary' ? c.primaryPressed : bg,
-          borderColor: kind === 'secondary' ? c.border : 'transparent',
-          opacity: disabled ? 0.5 : pressed && kind !== 'primary' ? 0.8 : 1,
-        },
+        kind === 'primary'
+          ? { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden', alignItems: 'stretch', borderColor: 'transparent', opacity: disabled ? 0.5 : pressed ? 0.85 : 1 }
+          : {
+              backgroundColor: bg,
+              borderColor: kind === 'secondary' ? c.border : 'transparent',
+              opacity: disabled ? 0.5 : pressed ? 0.8 : 1,
+            },
         style,
       ]}
     >
-      {busy ? (
-        <ActivityIndicator color={fg} />
+      {kind === 'primary' ? (
+        // OpsNest teal → blue, the same as the splash and onboarding buttons.
+        <LinearGradient colors={brandGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientFill}>
+          {inner}
+        </LinearGradient>
       ) : (
-        <View style={styles.buttonInner}>
-          {icon}
-          <Text style={[styles.buttonText, { color: fg }]}>{label}</Text>
-        </View>
+        inner
       )}
     </Pressable>
   );
@@ -138,6 +149,7 @@ const styles = StyleSheet.create({
   eyebrow: { fontFamily: fonts.regular, fontSize: 12, opacity: 0.75, marginBottom: 2 },
   title: { fontFamily: fonts.semibold, fontSize: 20, lineHeight: 26 },
   button: { borderRadius: radius.pill, paddingVertical: 14, paddingHorizontal: spacing.lg, alignItems: 'center', borderWidth: 1 },
+  gradientFill: { paddingVertical: 14, paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center' },
   buttonInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   buttonText: { fontFamily: fonts.semibold, fontSize: 15 },
   label: { fontFamily: fonts.medium, fontSize: 11, letterSpacing: 0.6 },

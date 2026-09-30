@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, goBack, ScreenHeader, useBottomPad } from '@/components/ui';
+import { goBack, ScreenHeader, useBottomPad } from '@/components/ui';
 import { LEGAL_DOCS, LEGAL_UPDATED, LEGAL_VERSION, LegalDocId, OPERATOR } from '@/legal/documents';
 import { needsOnboarding, useOnboarding } from '@/state/onboarding';
 import { fonts, spacing, useThemeColors } from '@/theme';
@@ -39,7 +39,6 @@ export default function LegalDoc() {
             ))}
           </View>
         ))}
-        <Button label={onboarding ? 'Done — back to the documents' : 'Done'} onPress={close} />
       </ScrollView>
     </View>
   );

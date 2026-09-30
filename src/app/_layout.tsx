@@ -66,6 +66,7 @@ function RootStack({ onReady }: { onReady: () => void }) {
   useAiQueue(session && !locked ? session.user.id : undefined);
   const consent = useOnboarding((s) => s.consent);
   const onboarding = useOnboarding((s) => needsOnboarding(s));
+  const reportSetupDone = useOnboarding((s) => s.reportSetupDone);
   useEffect(() => {
     if (session) flushErrors();
   }, [session]);
@@ -97,28 +98,34 @@ function RootStack({ onReady }: { onReady: () => void }) {
         <Stack.Screen name="signup" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="forgot-password" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
-      {/* Readable any time: during onboarding and from Settings. */}
-      <Stack.Screen name="legal/[doc]" options={{ animation: 'slide_from_bottom' }} />
-      <Stack.Screen name="legal/index" options={{ animation: 'slide_from_right' }} />
-      {/* Deep-link landings (email links, Google/Apple return); open signed in or out. */}
-      <Stack.Screen name="auth-callback" />
-      <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right' }} />
       <Stack.Protected guard={!onboarding && signedIn && locked}>
         <Stack.Screen name="lock" />
       </Stack.Protected>
-      {/* Welcome comes first after sign-in / app start; "Go to Month screen" clears the guard. */}
+      {/* Only after a fresh sign-in; a returning user goes from the fingerprint straight to Home. */}
       <Stack.Protected guard={!onboarding && signedIn && !locked && welcomePending}>
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
       </Stack.Protected>
-      <Stack.Protected guard={!onboarding && signedIn && !locked && !welcomePending}>
+      {/* Home and the rest of the app. Listed before report-settings so it is the landing screen. */}
+      <Stack.Protected guard={!onboarding && signedIn && !locked && !welcomePending && reportSetupDone}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="system-check" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="report-settings" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="bill/[id]" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="bills/[kind]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="descriptions" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="backup" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="legal/index" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
+      {/* First sign-in on this phone: set up the report header, then Home. Also opened from Settings. */}
+      <Stack.Protected guard={!onboarding && signedIn && !locked && !welcomePending}>
+        <Stack.Screen name="report-settings" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
+      {/*
+        Always reachable, and deliberately LAST: when a guard changes, expo-router opens the
+        first screen in this list that is allowed, so these must never come first.
+      */}
+      <Stack.Screen name="legal/[doc]" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="auth-callback" />
+      <Stack.Screen name="reset-password" options={{ animation: 'slide_from_right' }} />
     </Stack>
   );
 }

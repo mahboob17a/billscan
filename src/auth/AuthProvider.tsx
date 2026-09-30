@@ -6,6 +6,7 @@ import { AppState } from 'react-native';
 import { ensureUserSetup } from '@/db/repo';
 import { isBiometricEnabled, setBiometricEnabled } from '@/lib/secureStorage';
 import { fetchProfile, Profile, resolveLoginEmail, signInErrorMessage, supabase } from '@/lib/supabase';
+import { useOnboarding } from '@/state/onboarding';
 
 /** Lock the app after this long in the background (Blueprint: 5 minutes). */
 export const AUTO_LOCK_MS = 5 * 60 * 1000;
@@ -86,7 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBiometricEnabledState(bio);
       await applySession(data.session);
       setLocked(Boolean(data.session) && bio);
-      setWelcomePending(Boolean(data.session));
+      // A returning user (saved sign-in) goes straight to Home after the fingerprint;
+      // the welcome card and the report set-up are only shown after a fresh sign-in.
+      if (data.session) await useOnboarding.getState().finishReportSetup();
       setInitializing(false);
     })();
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {

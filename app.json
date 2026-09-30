@@ -3,11 +3,11 @@
     "name": "BillScan",
     "slug": "billscan",
     "scheme": "billscan",
-    "version": "0.10.2",
+    "version": "0.11.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#F4F2FB",
+    "backgroundColor": "#F2F5FA",
     "experiments": {
       "typedRoutes": true
     },
@@ -23,7 +23,7 @@
       "package": "com.daryas.billscan",
       "versionCode": 13,
       "adaptiveIcon": {
-        "backgroundColor": "#1B2230",
+        "backgroundColor": "#19D3C5",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

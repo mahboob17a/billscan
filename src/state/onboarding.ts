@@ -9,6 +9,7 @@ import { LEGAL_VERSION } from '@/legal/documents';
 
 const CONSENT_KEY = 'billscan.consent';
 const PERMISSIONS_KEY = 'billscan.permissions_seen';
+const REPORT_SETUP_KEY = 'billscan.report_setup_done';
 
 export interface ConsentRecord {
   version: string;
@@ -19,26 +20,32 @@ interface OnboardingState {
   loaded: boolean;
   consent: ConsentRecord | null;
   permissionsSeen: boolean;
+  /** The report header has been set up once after the first sign-in on this phone. */
+  reportSetupDone: boolean;
   load: () => Promise<void>;
   accept: () => Promise<void>;
   finishPermissions: () => Promise<void>;
+  finishReportSetup: () => Promise<void>;
 }
 
 export const useOnboarding = create<OnboardingState>((set) => ({
   loaded: false,
   consent: null,
   permissionsSeen: false,
+  reportSetupDone: false,
   load: async () => {
     let consent: ConsentRecord | null = null;
     let permissionsSeen = false;
+    let reportSetupDone = false;
     try {
       const raw = await SecureStore.getItemAsync(CONSENT_KEY);
       consent = raw ? (JSON.parse(raw) as ConsentRecord) : null;
       permissionsSeen = (await SecureStore.getItemAsync(PERMISSIONS_KEY)) === '1';
+      reportSetupDone = (await SecureStore.getItemAsync(REPORT_SETUP_KEY)) === '1';
     } catch {
       // Unreadable storage: show onboarding again.
     }
-    set({ loaded: true, consent, permissionsSeen });
+    set({ loaded: true, consent, permissionsSeen, reportSetupDone });
   },
   accept: async () => {
     const consent: ConsentRecord = { version: LEGAL_VERSION, acceptedAt: new Date().toISOString() };
@@ -48,6 +55,10 @@ export const useOnboarding = create<OnboardingState>((set) => ({
   finishPermissions: async () => {
     await SecureStore.setItemAsync(PERMISSIONS_KEY, '1');
     set({ permissionsSeen: true });
+  },
+  finishReportSetup: async () => {
+    set({ reportSetupDone: true });
+    await SecureStore.setItemAsync(REPORT_SETUP_KEY, '1').catch(() => {});
   },
 }));
 

@@ -1,15 +1,19 @@
 /**
- * BillScan design tokens — palette approved in Blueprint v0.8:
- * Slate bars, Royal Violet actions, Mint highlight, Lavender Mist background.
+ * BillScan design tokens — OpsNest theme (matches opsnest.tools and the splash):
+ * deep navy bars, teal→blue actions, cool light background.
  * The exported Excel report never uses these; it keeps the DTR template's navy and sand.
  */
 
 export const palette = {
-  slate: '#1B2230',
-  slate2: '#2A3446',
-  violet: '#6D4AFF',
-  violetPressed: '#5A38EE',
-  violetSoft: '#EFEBFF',
+  navy: '#0B1B34',
+  navyMid: '#0D2443',
+  navyLow: '#0F344E',
+  teal: '#19D3C5',
+  tealDeep: '#0E9F95',
+  blue: '#3B82F6',
+  blueDeep: '#2563EB',
+  bluePressed: '#1D4FD8',
+  blueSoft: '#E6EFFE',
   mint: '#10B981',
   mintSoft: '#E3F5EE',
   verified: '#0E8A5F',
@@ -17,12 +21,17 @@ export const palette = {
   amberSoft: '#FDF1E1',
   red: '#B42318',
   redSoft: '#FDE8E6',
-  lavenderMist: '#F4F2FB',
+  mist: '#F2F5FA',
   white: '#FFFFFF',
-  ink: '#141221',
-  muted: '#5E5A72',
-  line: '#E4E1F0',
+  ink: '#0B1B34',
+  muted: '#5B6B82',
+  line: '#DCE3EE',
+  // Kept for older components.
+  slate: '#0B1B34',
 } as const;
+
+/** Teal → blue, the OpsNest action gradient (primary buttons, highlights). */
+export const brandGradient = [palette.teal, palette.blue] as const;
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -49,18 +58,18 @@ export interface ThemeColors {
 
 export const colors: Record<ColorScheme, ThemeColors> = {
   light: {
-    background: palette.lavenderMist,
+    background: palette.mist,
     surface: palette.white,
     text: palette.ink,
     textMuted: palette.muted,
     border: palette.line,
-    bar: palette.slate,
+    bar: palette.navy,
     onBar: palette.white,
-    primary: palette.violet,
-    primaryPressed: palette.violetPressed,
+    primary: palette.blueDeep,
+    primaryPressed: palette.bluePressed,
     onPrimary: palette.white,
-    primarySoft: palette.violetSoft,
-    highlight: palette.mint,
+    primarySoft: palette.blueSoft,
+    highlight: palette.tealDeep,
     success: palette.verified,
     successSoft: palette.mintSoft,
     warning: palette.amber,
@@ -69,20 +78,20 @@ export const colors: Record<ColorScheme, ThemeColors> = {
     dangerSoft: palette.redSoft,
   },
   dark: {
-    background: '#0E0C16',
-    surface: '#181526',
-    text: '#ECEAF5',
-    textMuted: '#A29EB8',
-    border: '#2C2842',
-    bar: '#1F1B30',
+    background: palette.navy,
+    surface: palette.navyMid,
+    text: '#EAF1FA',
+    textMuted: '#8FA3BF',
+    border: '#1C3A5E',
+    bar: '#071427',
     onBar: '#FFFFFF',
-    primary: '#8F74FF',
-    primaryPressed: '#7C5FFF',
+    primary: palette.blue,
+    primaryPressed: palette.blueDeep,
     onPrimary: '#FFFFFF',
-    primarySoft: '#2A2350',
-    highlight: '#34D399',
+    primarySoft: '#12305A',
+    highlight: palette.teal,
     success: '#34D399',
-    successSoft: '#10301F',
+    successSoft: '#0E3326',
     warning: '#F0A65A',
     warningSoft: '#3A2812',
     danger: '#F2877B',
