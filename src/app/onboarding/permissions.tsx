@@ -42,21 +42,21 @@ export default function Permissions() {
     <OnbScreen footer={<GradientButton label="Continue" icon="arrow-right" onPress={onContinue} busy={busy} />}>
       <ScrollView contentContainerStyle={styles.body}>
         <StepHeader step={2} of={2} title="Allow access" subtitle="BillScan only uses these to scan and store your bills. Nothing is taken without you tapping a button." />
-        <PermissionRow icon="scan-bill" title="Camera" reason="To photograph and scan purchase bills." state={camera} onAllow={async () => setCamera(await requestCamera())} />
+        <PermissionRow icon="scan" title="Camera" reason="To photograph and scan purchase bills." state={camera} onAllow={async () => setCamera(await requestCamera())} />
         <PermissionRow
-          icon="image-multiple-outline"
+          icon="photos"
           title="Photos"
           reason="To add a bill you have already photographed. You choose each photo; BillScan never looks through your gallery."
           state={photos}
           onAllow={async () => setPhotos(await requestPhotos())}
         />
         <PermissionRow
-          icon="folder-outline"
+          icon="files"
           title="Files and storage"
           reason="Bills, photos and reports are saved inside BillScan. You pick where to share a report or which backup to restore."
           state="not-needed"
         />
-        <PermissionRow icon="wifi" title="Internet" reason="To sign in and to read bills with AI. Without signal, scans wait and are read later." state="auto" />
+        <PermissionRow icon="internet" title="Internet" reason="To sign in and to read bills with AI. Without signal, scans wait and are read later." state="auto" />
         <PermissionRow icon="fingerprint" title="Fingerprint / face unlock" reason="Optional quick unlock that keeps your bills private." state="later" />
         <Text style={styles.small}>You can change these any time in your phone’s Settings → Apps → BillScan → Permissions.</Text>
       </ScrollView>
