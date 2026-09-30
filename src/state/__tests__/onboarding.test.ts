@@ -1,11 +1,11 @@
+import { LEGAL_VERSION } from '@/legal/documents';
+import { needsOnboarding, useOnboarding } from '../onboarding';
+
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(async () => null),
   setItemAsync: jest.fn(async () => {}),
   deleteItemAsync: jest.fn(async () => {}),
 }));
-
-import { LEGAL_VERSION } from '@/legal/documents';
-import { needsOnboarding, useOnboarding } from '../onboarding';
 
 const done = { consent: { version: LEGAL_VERSION, acceptedAt: '2026-10-01T00:00:00Z' }, permissionsSeen: true, reportSetupDone: true };
 
